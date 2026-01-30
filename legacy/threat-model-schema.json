@@ -1,0 +1,584 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://freeandfair.us/threat-model-schema.json",
+  "title": "Tusk Voting System Threat Model",
+  "description": "Schema for defining threat models including properties, attacks, mitigations, and contexts for the Tusk E2E-VIV voting system",
+  "type": "object",
+  "properties": {
+    "properties": {
+      "type": "object",
+      "description": "Hierarchical security properties that the system should satisfy. Properties form an AND composition tree. Each property can be either a string (leaf property) or an array [description, children_dict] where children_dict contains child properties.",
+      "patternProperties": {
+        "^[a-zA-Z0-9_%+-]+$": {
+          "oneOf": [
+            {
+              "type": "array",
+              "description": "Property with description (first element) and child properties (second element as a dictionary)",
+              "minItems": 2,
+              "maxItems": 2,
+              "prefixItems": [
+                {
+                  "type": "string",
+                  "description": "Description of this property"
+                },
+                {
+                  "type": "object",
+                  "description": "Child properties as a dictionary",
+                  "patternProperties": {
+                    "^[a-zA-Z0-9_.%+-]+$": {
+                      "$ref": "#/properties/properties/patternProperties/^[a-zA-Z0-9_%+-]+$"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "string",
+              "description": "Leaf property with only a description"
+            }
+          ]
+        }
+      }
+    },
+    "attacks": {
+      "type": "array",
+      "description": "Attack trees describing ways to undermine system properties. Parent-child relationships form OR compositions.",
+      "items": {
+        "$ref": "#/$defs/attack"
+      }
+    },
+    "mitigations": {
+      "type": "object",
+      "description": "Flat structure of countermeasures to prevent or reduce impact of attacks",
+      "patternProperties": {
+        "^[a-zA-Z0-9_%+-]+$": {
+          "type": "array",
+          "description": "Mitigation definition: [name, description, scope]",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      }
+    },
+    "contexts": {
+      "type": "object",
+      "description": "Contexts describe where attacks are carried out (subsystems, networks, actors, primitives, data)",
+      "patternProperties": {
+        "^[a-zA-Z0-9_%+-]+$": {
+          "type": "array",
+          "description": "Context definition: [name, kind, optional description]",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "maxItems": 3
+        }
+      }
+    },
+    "stride": {
+      "$ref": "#/$defs/property_mapping",
+      "description": "STRIDE threat categories mapped to security properties"
+    },
+    "e-voting": {
+      "$ref": "#/$defs/property_mapping",
+      "description": "E-voting domain properties mapped to security properties"
+    }
+  },
+  "$defs": {
+    "attack": {
+      "type": "object",
+      "description": "An attack against the system, either abstract (template) or concrete (instantiated). Structure: {_: {attack fields}, children: [...], mitigations: [...]}",
+      "properties": {
+        "_": {
+          "type": "object",
+          "description": "Attack definition object (identifier will be auto-generated or explicitly set)",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "A",
+                "S"
+              ],
+              "description": "Attack kind: 'A' for Abstract (template), 'S' for Specific (concrete). Defaults to 'S' if omitted."
+            },
+            "name": {
+              "type": "string",
+              "description": "Human-readable name of the attack"
+            },
+            "description": {
+              "type": "string",
+              "description": "Detailed description of the attack. Use {X} for hyperlinks, {[X]} for citations."
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "A1",
+                  "A2",
+                  "A3",
+                  "A4",
+                  "AVAILABILITY",
+                  "C1",
+                  "C1.1",
+                  "C2",
+                  "C2.1",
+                  "C3",
+                  "C3.1",
+                  "C3.1.1",
+                  "C3.1.2",
+                  "C3.2",
+                  "C3.3",
+                  "C3.4",
+                  "C3.4.1",
+                  "C3.4.2",
+                  "C3.5",
+                  "C3.5.1",
+                  "C3.5.2",
+                  "C3.6",
+                  "C3.7",
+                  "CONFIDENTIALITY",
+                  "CORRECTNESS",
+                  "D1",
+                  "D2",
+                  "D3",
+                  "DISPUTE_FREENESS",
+                  "INTEGRITY",
+                  "P1",
+                  "P1.1",
+                  "P1.2",
+                  "P1.3",
+                  "P1.4",
+                  "P2",
+                  "P3",
+                  "P3.1",
+                  "P3.2",
+                  "V1",
+                  "V1.1",
+                  "V2",
+                  "V2.1",
+                  "V3",
+                  "V3.1",
+                  "V4",
+                  "V4.1",
+                  "V5",
+                  "V5.1",
+                  "VERIFIABILITY"
+                ],
+                "description": "Property identifier (auto-generated from properties section)"
+              },
+              "description": "List of property identifiers this attack targets"
+            },
+            "instance_of": {
+              "type": "string",
+              "enum": [
+                "Broken cryptography",
+                "Broken cryptography.Broken primitive",
+                "Broken cryptography.Insecure implementation---Dependency",
+                "Broken cryptography.Insecure implementation---Owned",
+                "Broken cryptography.Insecure parameters",
+                "Broken cryptography.Insecure platform",
+                "Compromised device",
+                "Compromised device.Escalation of privilege",
+                "Compromised device.Intrusion",
+                "Compromised device.Malicious cloud provider",
+                "Compromised device.Malicious hardware",
+                "Compromised device.Malicious programming",
+                "Compromised device.Malware",
+                "Compromised device.Supply chain attack",
+                "Compromised device.Virtualization attack",
+                "Compromised network",
+                "Compromised network.Network sabotage",
+                "Compromised network.Network tampering",
+                "Compromised user device",
+                "Corruption",
+                "Phishing",
+                "Side channel",
+                "Spoofing"
+              ],
+              "description": "Identifier of the abstract attack this is an instance of"
+            },
+            "contexts": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "AGN",
+                  "AS",
+                  "BB",
+                  "BCA",
+                  "BP",
+                  "CRD",
+                  "DPOK",
+                  "EA",
+                  "EAA",
+                  "EAN",
+                  "EAS",
+                  "EON",
+                  "EST",
+                  "IN",
+                  "PBB",
+                  "PKE",
+                  "POPK",
+                  "SIG",
+                  "SPOK",
+                  "SUB",
+                  "TA",
+                  "TAS",
+                  "TR",
+                  "TST",
+                  "VA",
+                  "VD",
+                  "VER",
+                  "VO",
+                  "VSIG"
+                ],
+                "description": "Context identifier (auto-generated from contexts section)"
+              },
+              "description": "List of context identifiers where this attack can occur. Creates separate attack instances per context."
+            },
+            "parents": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "Bad decryption",
+                      "Bad decryption.Compromised device",
+                      "Bad decryption.Compromised device",
+                      "Bad decryption.Corruption",
+                      "Bad decryption.Corruption",
+                      "Bad decryption.Network tampering",
+                      "Bad mixing",
+                      "Bad mixing.Compromised device",
+                      "Bad mixing.Compromised device",
+                      "Bad mixing.Corruption",
+                      "Bad mixing.Corruption",
+                      "Bad mixing.Network tampering",
+                      "Bad printing",
+                      "Bad printing.Compromised device",
+                      "Bad printing.Compromised device",
+                      "Bad printing.Corruption",
+                      "Bad printing.Network tampering",
+                      "Bad tabulation",
+                      "Bad tabulation.Compromised device",
+                      "Bad tabulation.Corruption",
+                      "Bad tabulation.Network tampering",
+                      "Ballot tampering",
+                      "Ballot tampering.Compromised device",
+                      "Ballot tampering.Corruption",
+                      "Ballot tampering.Network tampering",
+                      "Broken ballot independence",
+                      "Broken ballot independence.Ballot copying",
+                      "Broken ballot independence.Malleability attack",
+                      "Broken decryption proofs",
+                      "Broken decryption proofs.Broken cryptography",
+                      "Broken encryption",
+                      "Broken encryption.Broken cryptography",
+                      "Broken shuffle proofs",
+                      "Broken shuffle proofs.Broken cryptography",
+                      "Broken signatures",
+                      "Broken signatures.Broken cryptography",
+                      "Compromised key fragments",
+                      "Compromised key fragments.Compromised device",
+                      "Compromised key fragments.Corruption",
+                      "Compromised key fragments.Side channel",
+                      "Compromised shuffle data",
+                      "Compromised shuffle data.Compromised device",
+                      "Compromised shuffle data.Corruption",
+                      "Compromised shuffle data.Side channel",
+                      "Compromised signature keys",
+                      "Compromised signature keys.Phishing",
+                      "Denial of service",
+                      "Denial of service.Indiscriminate DoS",
+                      "Denial of service.Spoofing",
+                      "Denial of service.Targeted DoS (Infrastructure)",
+                      "Denial of service.Targeted DoS (Voters)",
+                      "Eligibility stuffing",
+                      "Eligibility stuffing.Corruption",
+                      "Forged signatures",
+                      "Forged signatures.Forged system signature",
+                      "Forged signatures.Forged voter signature",
+                      "Future decryption",
+                      "Future decryption.Unbounded computation",
+                      "Ineligible ballots",
+                      "Ineligible ballots.Compromised device",
+                      "Ineligible ballots.Compromised device",
+                      "Ineligible ballots.Corruption",
+                      "Ineligible ballots.Network tampering",
+                      "Ineligible ballots.Phishing",
+                      "Internal sabotage",
+                      "Internal sabotage.Election sabotage---Corruption",
+                      "Internal sabotage.Keygen sabotage---Corruption",
+                      "Internal sabotage.Network sabotage",
+                      "Internal sabotage.Subsystem sabotage",
+                      "Internal sabotage.Tally sabotage---Overwhelming corruption",
+                      "Leaked choices",
+                      "Leaked choices.Compromised voting device",
+                      "Leaked choices.Side channel",
+                      "Malicious bulletin board",
+                      "Malicious bulletin board.Cheating BB---cryptogram check",
+                      "Malicious bulletin board.Cheating BB---election audit",
+                      "Malicious bulletin board.Cheating EA---cryptogram check",
+                      "Malicious bulletin board.Cheating EA---election audit",
+                      "Malicious bulletin board.Clash attack",
+                      "Malicious bulletin board.Time of Check to Time of Use---Compromised device",
+                      "Malicious bulletin board.Time of Check to Time of Use---Corruption",
+                      "Malicious public key",
+                      "Malicious public key.Corruption",
+                      "Malicious reporting",
+                      "Malicious reporting.Malicious reporting of VD",
+                      "Malicious reporting.Vote receipt replay",
+                      "Malicious verification application",
+                      "Malicious verification application.Cheating auditing application",
+                      "Malicious verification application.Cheating ballot checking application",
+                      "Mismatched encryption",
+                      "Mismatched encryption.Cheating voting device",
+                      "Physical observation",
+                      "Physical observation.Shoulder surfing",
+                      "Premature tabulation",
+                      "Premature tabulation.Corruption",
+                      "Proof of choices",
+                      "Proof of choices.Italian attack",
+                      "Proof of choices.Manual recording",
+                      "Proof of choices.Randomness extraction",
+                      "Proof of choices.Recording malware",
+                      "Tally inference attack",
+                      "Tally inference attack.Double tally attack---EA",
+                      "Tally inference attack.Double tally attack---TAS",
+                      "Tally inference attack.Reduced anonymity set",
+                      "Unmixed decryption",
+                      "Unmixed decryption.Compromised device",
+                      "Unmixed decryption.Corruption",
+                      "Wrong public key",
+                      "Wrong public key.Compromised device",
+                      "Wrong public key.Compromised network",
+                      "Wrong public key.Corruption"
+                    ],
+                    "description": "Parent attack identifier"
+                  },
+                  "description": "Additional parent attack identifiers (beyond hierarchical parent)"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "Bad decryption",
+                    "Bad decryption.Compromised device",
+                    "Bad decryption.Compromised device",
+                    "Bad decryption.Corruption",
+                    "Bad decryption.Corruption",
+                    "Bad decryption.Network tampering",
+                    "Bad mixing",
+                    "Bad mixing.Compromised device",
+                    "Bad mixing.Compromised device",
+                    "Bad mixing.Corruption",
+                    "Bad mixing.Corruption",
+                    "Bad mixing.Network tampering",
+                    "Bad printing",
+                    "Bad printing.Compromised device",
+                    "Bad printing.Compromised device",
+                    "Bad printing.Corruption",
+                    "Bad printing.Network tampering",
+                    "Bad tabulation",
+                    "Bad tabulation.Compromised device",
+                    "Bad tabulation.Corruption",
+                    "Bad tabulation.Network tampering",
+                    "Ballot tampering",
+                    "Ballot tampering.Compromised device",
+                    "Ballot tampering.Corruption",
+                    "Ballot tampering.Network tampering",
+                    "Broken ballot independence",
+                    "Broken ballot independence.Ballot copying",
+                    "Broken ballot independence.Malleability attack",
+                    "Broken decryption proofs",
+                    "Broken decryption proofs.Broken cryptography",
+                    "Broken encryption",
+                    "Broken encryption.Broken cryptography",
+                    "Broken shuffle proofs",
+                    "Broken shuffle proofs.Broken cryptography",
+                    "Broken signatures",
+                    "Broken signatures.Broken cryptography",
+                    "Compromised key fragments",
+                    "Compromised key fragments.Compromised device",
+                    "Compromised key fragments.Corruption",
+                    "Compromised key fragments.Side channel",
+                    "Compromised shuffle data",
+                    "Compromised shuffle data.Compromised device",
+                    "Compromised shuffle data.Corruption",
+                    "Compromised shuffle data.Side channel",
+                    "Compromised signature keys",
+                    "Compromised signature keys.Phishing",
+                    "Denial of service",
+                    "Denial of service.Indiscriminate DoS",
+                    "Denial of service.Spoofing",
+                    "Denial of service.Targeted DoS (Infrastructure)",
+                    "Denial of service.Targeted DoS (Voters)",
+                    "Eligibility stuffing",
+                    "Eligibility stuffing.Corruption",
+                    "Forged signatures",
+                    "Forged signatures.Forged system signature",
+                    "Forged signatures.Forged voter signature",
+                    "Future decryption",
+                    "Future decryption.Unbounded computation",
+                    "Ineligible ballots",
+                    "Ineligible ballots.Compromised device",
+                    "Ineligible ballots.Compromised device",
+                    "Ineligible ballots.Corruption",
+                    "Ineligible ballots.Network tampering",
+                    "Ineligible ballots.Phishing",
+                    "Internal sabotage",
+                    "Internal sabotage.Election sabotage---Corruption",
+                    "Internal sabotage.Keygen sabotage---Corruption",
+                    "Internal sabotage.Network sabotage",
+                    "Internal sabotage.Subsystem sabotage",
+                    "Internal sabotage.Tally sabotage---Overwhelming corruption",
+                    "Leaked choices",
+                    "Leaked choices.Compromised voting device",
+                    "Leaked choices.Side channel",
+                    "Malicious bulletin board",
+                    "Malicious bulletin board.Cheating BB---cryptogram check",
+                    "Malicious bulletin board.Cheating BB---election audit",
+                    "Malicious bulletin board.Cheating EA---cryptogram check",
+                    "Malicious bulletin board.Cheating EA---election audit",
+                    "Malicious bulletin board.Clash attack",
+                    "Malicious bulletin board.Time of Check to Time of Use---Compromised device",
+                    "Malicious bulletin board.Time of Check to Time of Use---Corruption",
+                    "Malicious public key",
+                    "Malicious public key.Corruption",
+                    "Malicious reporting",
+                    "Malicious reporting.Malicious reporting of VD",
+                    "Malicious reporting.Vote receipt replay",
+                    "Malicious verification application",
+                    "Malicious verification application.Cheating auditing application",
+                    "Malicious verification application.Cheating ballot checking application",
+                    "Mismatched encryption",
+                    "Mismatched encryption.Cheating voting device",
+                    "Physical observation",
+                    "Physical observation.Shoulder surfing",
+                    "Premature tabulation",
+                    "Premature tabulation.Corruption",
+                    "Proof of choices",
+                    "Proof of choices.Italian attack",
+                    "Proof of choices.Manual recording",
+                    "Proof of choices.Randomness extraction",
+                    "Proof of choices.Recording malware",
+                    "Tally inference attack",
+                    "Tally inference attack.Double tally attack---EA",
+                    "Tally inference attack.Double tally attack---TAS",
+                    "Tally inference attack.Reduced anonymity set",
+                    "Unmixed decryption",
+                    "Unmixed decryption.Compromised device",
+                    "Unmixed decryption.Corruption",
+                    "Wrong public key",
+                    "Wrong public key.Compromised device",
+                    "Wrong public key.Compromised network",
+                    "Wrong public key.Corruption"
+                  ],
+                  "description": "Parent attack identifier"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "children": {
+          "type": "array",
+          "description": "Child attacks representing ways this attack can be carried out (OR composition). NOTE: This is a sibling of '_', not inside it.",
+          "items": {
+            "$ref": "#/$defs/attack"
+          }
+        },
+        "mitigations": {
+          "type": "array",
+          "description": "Mitigations that address this attack. Format: [mitigation_name, rationale] or [mitigation_name, context, rationale]. NOTE: This is a sibling of '_', not inside it.",
+          "items": {
+            "type": "array",
+            "items": [
+              {
+                "type": "string",
+                "enum": [
+                  "Append-only trustee board",
+                  "Auditable pseudonyms",
+                  "Audited platforms",
+                  "Ballot uniqueness audit",
+                  "Ballot weeding",
+                  "Cast as intended verifiability",
+                  "Controlled environment",
+                  "Counted as recorded verifiability",
+                  "Cybersecurity---Escalation",
+                  "Cybersecurity---Intrusion",
+                  "Cybersecurity---Malware",
+                  "Cybersecurity---Supply chains",
+                  "Cybersecurity---Virtualization",
+                  "Denial of service protection",
+                  "Dependency minimization",
+                  "Domain separation",
+                  "Eligibility verifiability",
+                  "External audits",
+                  "Formal verification",
+                  "Formally verified dependencies",
+                  "Message signatures",
+                  "Non-malleable cryptosystem",
+                  "Operational redundancy",
+                  "Out of scope",
+                  "Proof of plaintext knowledge",
+                  "Recorded as cast verifiability",
+                  "Security proof",
+                  "TLS",
+                  "Tamper evident bulletin board",
+                  "Trust distribution",
+                  "Voter pseudonyms",
+                  "Voter specific Naor-Yung proofs"
+                ],
+                "description": "Mitigation name (auto-generated from mitigations section)"
+              },
+              {
+                "type": "string",
+                "description": "Rationale or context"
+              },
+              {
+                "type": "string",
+                "description": "Rationale (if context was provided as second element)"
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 3,
+            "additionalItems": false
+          }
+        }
+      },
+      "required": [
+        "_"
+      ],
+      "additionalProperties": false
+    },
+    "property_mapping": {
+      "type": "object",
+      "description": "Maps external property frameworks to internal security properties",
+      "patternProperties": {
+        "^[a-zA-Z0-9_%+-]+$": {
+          "type": "array",
+          "description": "Property mapping: [name, [related_property_identifiers]]",
+          "prefixItems": [
+            {
+              "type": "string",
+              "description": "Display name of the property"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "List of related internal property identifiers"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    }
+  }
+}
