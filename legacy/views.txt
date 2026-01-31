@@ -1,0 +1,959 @@
+This file shows the results of running view.py on our legacy tm.yaml threat model. First we show
+the help screen for the command, and then the results for each of the commands shown as examples.
+Not all examples are represented at the moment, commands that specify a root node (-r) are not
+yet included, these are:
+
+./view.py -e property -t -r my_property     # prints properties tree, starting at 'my_property'
+./view.py -e attack -r my_attack            # prints attacks table, starting at my_attack
+./view.py -e mitigation -r my_attack        # prints mitigations table for attack 'my_attack'
+./view.py -e mitigation -r my_attack -t     # prints mitigations tree for attack 'my_attack'
+./view.py -e outstanding -r my_attack       # prints outstanding attacks starting at 'my_attack'
+
+❯ python view.py
+usage: view.py [-h] [-d [DATABASE]] [-t] [-e {property,context,mitigation,attack,outstanding}] [-r ROOT] [-o] [-a]
+
+Display data in table or tree format.
+
+options:
+  -h, --help            show this help message and exit
+  -d, --database [DATABASE]
+                        Path to the SQLite database file
+  -t, --tree            Display data in tree format
+  -e, --entity {property,context,mitigation,attack,outstanding}
+                        Specify the entity to display
+  -r, --root ROOT       Specify the root entity by name
+  -o, --oos             Show Out of scope "mitigations", for applicable views
+  -a, --abstract        Show abstract attacks, for applicable views
+
+Examples:
+    ./view.py -e property                       # prints all properties table
+    ./view.py -e property -t                    # prints all properties tree
+    ./view.py -e property -t -r my_property     # prints properties tree, starting at 'my_property'
+    ./view.py -e attack                         # prints all attacks table
+    ./view.py -e attack -t                      # prints all attacks tree
+    ./view.py -e attack -r my_attack            # prints attacks table, starting at my_attack
+    ./view.py -e mitigation                     # prints all mitigations table
+    ./view.py -e mitigation -r my_attack        # prints mitigations table for attack 'my_attack'
+    ./view.py -e mitigation -r my_attack -t     # prints mitigations tree for attack 'my_attack'
+    ./view.py -e context                        # prints all contexts
+    ./view.py -e outstanding                    # prints all outstanding attacks
+    ./view.py -e outstanding -r my_attack       # prints outstanding attacks starting at 'my_attack'
+
+❯ python view.py -e property -t
+AVAILABILITY The e-voting properties of {Robustness} and {Scalability} are mapped to this security objective.
+├── A1 Every voter must be able to cast their vote ({C1},..
+├── A2 All participants must be able to perform applicabl..
+├── A3 The election outcome must be computed in a timely ..
+└── A4 The election public key must be computed in a time..
+CONFIDENTIALITY The e-voting properties of Privacy, Everlasting privacy, Receipt-freeness, and Coercion-resistance are mapped to this security objective.
+├── P1 It must not be possible to link a voter to their v..
+│   ├── P1.1 The only information on voter selections leaked by..
+│   ├── P1.2 It must not be possible for anyone to decrypt cryp..
+│   ├── P1.3 It must not be possible for anyone to determine th..
+│   └── P1.4 The decryption process must only operate on crypto..
+├── P2 It must not be possible for future computationally..
+└── P3 It must not be possible for a voter to prove how t..
+    ├── P3.1 A voter does not gain a receipt that can be used t..
+    └── P3.2 A voter cannot cooperate with a coercer to prove t..
+INTEGRITY The e-voting properties of Accuracy, Eligibility, Fairness, Verifiability, and Dispute-freeness are mapped to this security objective.
+├── CORRECTNESS Correctness is the sum of Accuracy + Eligibility +..
+│   ├── C1 Votes are cast correctly.
+│   │   └── C1.1 Each cryptogram cast by the {VA} is an encryption ..
+│   ├── C2 Cast votes are correctly recorded.
+│   │   └── C2.1 Each cryptogram recorded in the {BB} is identical ..
+│   └── C3 Recorded votes are correctly counted.
+│       ├── C3.1 The set of cryptograms input to the mixing process..
+│       │   ├── C3.1.1 Each cryptogram input to the mixing process must m..
+│       │   └── C3.1.2 Each cryptogram input to the mixing process must m..
+│       ├── C3.2 The set of cryptograms output by the mixing proces..
+│       ├── C3.3 The set of cryptograms input to the decryption pro..
+│       ├── C3.4 Each plaintext output by the decryption process mu..
+│       │   ├── C3.4.1 Each partial decryption of every cryptogram must h..
+│       │   └── C3.4.2 Each plaintext for every cryptogram must have been..
+│       ├── C3.5 The election outcome is correctly computed.
+│       │   ├── C3.5.1 The input to the tabulation algorithm is identical..
+│       │   └── C3.5.2 The tabulation algorithm is correctly applied.
+│       ├── C3.6 The set of printed ballots must match one-to-one w..
+│       └── C3.7 The mixing, decryption, tabulation, and printing p..
+├── DISPUTE_FREENESS In general, dispute-freeness refers to the existen..
+│   ├── D1 A voter claims to have cast a ballot $b$, while th..
+│   ├── D2 A voter claims to have not cast a ballot $b$, whil..
+│   └── D3 A voter claims that their device is producing inco..
+└── VERIFIABILITY Verifiability refers to the ability to verify that..
+    ├── V1 Cast-as-intended verifiability
+    │   └── V1.1 Voters must be able to verify {C1.1} for their cry..
+    ├── V2 Recorded-as-cast verifiability
+    │   └── V2.1 Voters must be able to verify {C2.1} for their cry..
+    ├── V3 Counted-as-recorded verifiability
+    │   └── V3.1 Anyone must be able to verify {C3.1.2}, {C3.2}, {C..
+    ├── V4 Eligibility verifiability
+    │   └── V4.1 Anyone must be able to verify {C3.1.1}.
+    └── V5 Software independence
+        └── V5.1 An (undetected) change or error in the software ca..
+
+❯ python view.py -e property
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| Name               | Description                                          | Attacks                                                                       | Mitigations                       |
++====================+======================================================+===============================================================================+===================================+
+| AVAILABILITY       | The e-voting properties of {Robustness} and {Scala.. |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └─A1               | Every voter must be able to cast their vote ({C1},.. | Malicious reporting.Malicious reporting of VD                                 | Denial of service protection      |
+|                    |                                                      | Denial of service.Targeted DoS (Infrastructure)                               | Controlled environment            |
+|                    |                                                      | Denial of service.Indiscriminate DoS                                          | Message signatures                |
+|                    |                                                      | Denial of service.Targeted DoS (Voters)                                       | Operational redundancy            |
+|                    |                                                      | Denial of service.Spoofing.VA                                                 | Cybersecurity---Malware           |
+|                    |                                                      | Internal sabotage.Subsystem sabotage.SUB                                      | Cybersecurity---Intrusion         |
+|                    |                                                      | Internal sabotage.Network sabotage.AGN                                        | Cybersecurity---Escalation        |
+|                    |                                                      | Internal sabotage.Network sabotage.EAN                                        | Dependency minimization           |
+|                    |                                                      | Internal sabotage.Network sabotage.EON                                        | Cybersecurity---Supply chains     |
+|                    |                                                      | Internal sabotage.Election sabotage---Corruption.EA                           | Cybersecurity---Virtualization    |
+|                    |                                                      |                                                                               | Trust distribution                |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └─A2               | All participants must be able to perform applicabl.. | Denial of service.Targeted DoS (Infrastructure)                               | Denial of service protection      |
+|                    |                                                      | Denial of service.Indiscriminate DoS                                          | Controlled environment            |
+|                    |                                                      | Denial of service.Targeted DoS (Voters)                                       | Message signatures                |
+|                    |                                                      | Denial of service.Spoofing.VA                                                 | Operational redundancy            |
+|                    |                                                      | Internal sabotage.Subsystem sabotage.SUB                                      | Cybersecurity---Malware           |
+|                    |                                                      | Internal sabotage.Network sabotage.AGN                                        | Cybersecurity---Intrusion         |
+|                    |                                                      | Internal sabotage.Network sabotage.EAN                                        | Cybersecurity---Escalation        |
+|                    |                                                      | Internal sabotage.Network sabotage.EON                                        | Dependency minimization           |
+|                    |                                                      | Internal sabotage.Election sabotage---Corruption.EA                           | Cybersecurity---Supply chains     |
+|                    |                                                      |                                                                               | Cybersecurity---Virtualization    |
+|                    |                                                      |                                                                               | Trust distribution                |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └─A3               | The election outcome must be computed in a timely .. | Internal sabotage.Subsystem sabotage.SUB                                      | Operational redundancy            |
+|                    |                                                      | Internal sabotage.Network sabotage.AGN                                        | Cybersecurity---Malware           |
+|                    |                                                      | Internal sabotage.Network sabotage.EAN                                        | Cybersecurity---Intrusion         |
+|                    |                                                      | Internal sabotage.Network sabotage.EON                                        | Cybersecurity---Escalation        |
+|                    |                                                      | Internal sabotage.Tally sabotage---Overwhelming corruption                    | Dependency minimization           |
+|                    |                                                      | Internal sabotage.Election sabotage---Corruption.EA                           | Cybersecurity---Supply chains     |
+|                    |                                                      |                                                                               | Cybersecurity---Virtualization    |
+|                    |                                                      |                                                                               | Trust distribution                |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └─A4               | The election public key must be computed in a time.. | Internal sabotage.Subsystem sabotage.SUB                                      | Operational redundancy            |
+|                    |                                                      | Internal sabotage.Network sabotage.AGN                                        | Cybersecurity---Malware           |
+|                    |                                                      | Internal sabotage.Network sabotage.EAN                                        | Cybersecurity---Intrusion         |
+|                    |                                                      | Internal sabotage.Network sabotage.EON                                        | Cybersecurity---Escalation        |
+|                    |                                                      | Internal sabotage.Keygen sabotage---Corruption.TR                             | Dependency minimization           |
+|                    |                                                      | Internal sabotage.Election sabotage---Corruption.EA                           | Cybersecurity---Supply chains     |
+|                    |                                                      |                                                                               | Cybersecurity---Virtualization    |
+|                    |                                                      |                                                                               | Trust distribution                |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| CONFIDENTIALITY    | The e-voting properties of Privacy, Everlasting pr.. |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └─P1               | It must not be possible to link a voter to their v.. | Physical observation.Shoulder surfing                                         | Append-only trustee board         |
+|                    |                                                      | Tally inference attack.Reduced anonymity set                                  | Trust distribution                |
+|                    |                                                      | Tally inference attack.Double tally attack---EA.EA                            | Operational redundancy            |
+|                    |                                                      | Tally inference attack.Double tally attack---TAS.TAS                          | Cybersecurity---Malware           |
+|                    |                                                      | Broken ballot independence.Malleability attack                                | Cybersecurity---Intrusion         |
+|                    |                                                      | Broken ballot independence.Ballot copying                                     | Cybersecurity---Escalation        |
+|                    |                                                      | Proof of choices.Recording malware                                            | Dependency minimization           |
+|                    |                                                      | Denial of service.Spoofing.VA                                                 | Cybersecurity---Supply chains     |
+|                    |                                                      |                                                                               | Cybersecurity---Virtualization    |
+|                    |                                                      |                                                                               | Non-malleable cryptosystem        |
+|                    |                                                      |                                                                               | Proof of plaintext knowledge      |
+|                    |                                                      |                                                                               | Ballot weeding                    |
+|                    |                                                      |                                                                               | Voter specific Naor-Yung proofs   |
+|                    |                                                      |                                                                               | Controlled environment            |
+|                    |                                                      |                                                                               | Message signatures                |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──P1.1            | The only information on voter selections leaked by.. | Leaked choices.Compromised voting device                                      | External audits                   |
+|                    |                                                      | Leaked choices.Side channel.VD                                                |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──P1.2            | It must not be possible for anyone to decrypt cryp.. | Compromised key fragments.Compromised device.TA                               | Trust distribution                |
+|                    |                                                      | Compromised key fragments.Corruption.TR                                       | Cybersecurity---Malware           |
+|                    |                                                      | Compromised key fragments.Side channel.TA                                     | Cybersecurity---Intrusion         |
+|                    |                                                      | Broken encryption.Broken cryptography.PKE                                     | Cybersecurity---Escalation        |
+|                    |                                                      | Wrong public key.Compromised device.TAS                                       | Dependency minimization           |
+|                    |                                                      | Wrong public key.Compromised device.EAS                                       | Cybersecurity---Supply chains     |
+|                    |                                                      | Wrong public key.Compromised device.EST                                       | Cybersecurity---Virtualization    |
+|                    |                                                      | Wrong public key.Compromised network.EAN                                      | Operational redundancy            |
+|                    |                                                      | Wrong public key.Compromised network.IN                                       | Controlled environment            |
+|                    |                                                      | Wrong public key.Corruption.EA                                                | External audits                   |
+|                    |                                                      | Malicious public key.Corruption.TR                                            | Security proof                    |
+|                    |                                                      |                                                                               | Formal verification               |
+|                    |                                                      |                                                                               | Formally verified dependencies    |
+|                    |                                                      |                                                                               | Audited platforms                 |
+|                    |                                                      |                                                                               | Message signatures                |
+|                    |                                                      |                                                                               | TLS                               |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──P1.3            | It must not be possible for anyone to determine th.. | Compromised shuffle data.Compromised device.TA                                | Trust distribution                |
+|                    |                                                      | Compromised shuffle data.Corruption.TR                                        | Cybersecurity---Malware           |
+|                    |                                                      | Compromised shuffle data.Side channel.TA                                      | Cybersecurity---Intrusion         |
+|                    |                                                      |                                                                               | Cybersecurity---Escalation        |
+|                    |                                                      |                                                                               | Dependency minimization           |
+|                    |                                                      |                                                                               | Cybersecurity---Supply chains     |
+|                    |                                                      |                                                                               | Cybersecurity---Virtualization    |
+|                    |                                                      |                                                                               | Operational redundancy            |
+|                    |                                                      |                                                                               | Controlled environment            |
+|                    |                                                      |                                                                               | External audits                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──P1.4            | The decryption process must only operate on crypto.. | Unmixed decryption.Compromised device.TA                                      | Trust distribution                |
+|                    |                                                      | Unmixed decryption.Corruption.TR                                              | Cybersecurity---Malware           |
+|                    |                                                      |                                                                               | Cybersecurity---Intrusion         |
+|                    |                                                      |                                                                               | Cybersecurity---Escalation        |
+|                    |                                                      |                                                                               | Dependency minimization           |
+|                    |                                                      |                                                                               | Cybersecurity---Supply chains     |
+|                    |                                                      |                                                                               | Cybersecurity---Virtualization    |
+|                    |                                                      |                                                                               | Operational redundancy            |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └─P2               | It must not be possible for future computationally.. | Future decryption.Unbounded computation                                       | Voter pseudonyms                  |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └─P3               | It must not be possible for a voter to prove how t.. |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──P3.1            | A voter does not gain a receipt that can be used t.. | Proof of choices.Randomness extraction                                        |                                   |
+|                    |                                                      | Proof of choices.Italian attack                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──P3.2            | A voter cannot cooperate with a coercer to prove t.. | Proof of choices.Manual recording                                             |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| INTEGRITY          | The e-voting properties of Accuracy, Eligibility, .. |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └─CORRECTNESS      | Correctness is the sum of Accuracy + Eligibility +.. |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──C1              | Votes are cast correctly.                            |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └───C1.1           | Each cryptogram cast by the {VA} is an encryption .. | Mismatched encryption.Cheating voting device.VA                               | Cast as intended verifiability    |
+|                    |                                                      | Denial of service.Spoofing.VA                                                 | Recorded as cast verifiability    |
+|                    |                                                      |                                                                               | Controlled environment            |
+|                    |                                                      |                                                                               | Message signatures                |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──C2              | Cast votes are correctly recorded.                   |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └───C2.1           | Each cryptogram recorded in the {BB} is identical .. | Ballot tampering.Network tampering.IN                                         | Recorded as cast verifiability    |
+|                    |                                                      | Ballot tampering.Network tampering.EAN                                        | Message signatures                |
+|                    |                                                      | Ballot tampering.Compromised device.EAS                                       | TLS                               |
+|                    |                                                      | Ballot tampering.Compromised device.BB                                        | Cybersecurity---Malware           |
+|                    |                                                      | Ballot tampering.Compromised device.EAA                                       | Cybersecurity---Intrusion         |
+|                    |                                                      | Ballot tampering.Compromised device.EST                                       | Cybersecurity---Escalation        |
+|                    |                                                      | Ballot tampering.Corruption.EA                                                | Dependency minimization           |
+|                    |                                                      | Ineligible ballots.Compromised device.EAS                                     | Cybersecurity---Supply chains     |
+|                    |                                                      | Ineligible ballots.Compromised device.BB                                      | Cybersecurity---Virtualization    |
+|                    |                                                      | Ineligible ballots.Corruption.EA                                              | Trust distribution                |
+|                    |                                                      |                                                                               | Operational redundancy            |
+|                    |                                                      |                                                                               | Eligibility verifiability         |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──C3              | Recorded votes are correctly counted.                |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └───C3.1           | The set of cryptograms input to the mixing process.. | Ineligible ballots.Network tampering.EAN                                      | Eligibility verifiability         |
+|                    |                                                      | Ineligible ballots.Network tampering.EON                                      | Message signatures                |
+|                    |                                                      |                                                                               | TLS                               |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └────C3.1.1        | Each cryptogram input to the mixing process must m.. | Ineligible ballots.Compromised device.AS                                      | Eligibility verifiability         |
+|                    |                                                      | Ineligible ballots.Phishing.CRD                                               | Cybersecurity---Malware           |
+|                    |                                                      |                                                                               | Cybersecurity---Intrusion         |
+|                    |                                                      |                                                                               | Cybersecurity---Escalation        |
+|                    |                                                      |                                                                               | Dependency minimization           |
+|                    |                                                      |                                                                               | Cybersecurity---Supply chains     |
+|                    |                                                      |                                                                               | Cybersecurity---Virtualization    |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └────C3.1.2        | Each cryptogram input to the mixing process must m.. |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └───C3.2           | The set of cryptograms output by the mixing proces.. | Bad mixing.Compromised device.TA                                              | Counted as recorded verifiability |
+|                    |                                                      | Bad mixing.Corruption.TR                                                      | Cybersecurity---Malware           |
+|                    |                                                      | Bad mixing.Compromised device.TAS                                             | Cybersecurity---Intrusion         |
+|                    |                                                      | Bad mixing.Network tampering.AGN                                              | Cybersecurity---Escalation        |
+|                    |                                                      |                                                                               | Dependency minimization           |
+|                    |                                                      |                                                                               | Cybersecurity---Supply chains     |
+|                    |                                                      |                                                                               | Cybersecurity---Virtualization    |
+|                    |                                                      |                                                                               | Trust distribution                |
+|                    |                                                      |                                                                               | Operational redundancy            |
+|                    |                                                      |                                                                               | Message signatures                |
+|                    |                                                      |                                                                               | TLS                               |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └───C3.3           | The set of cryptograms input to the decryption pro.. | Bad mixing.Compromised device.TAS                                             | Counted as recorded verifiability |
+|                    |                                                      | Bad mixing.Network tampering.AGN                                              | Message signatures                |
+|                    |                                                      |                                                                               | Cybersecurity---Malware           |
+|                    |                                                      |                                                                               | Cybersecurity---Intrusion         |
+|                    |                                                      |                                                                               | Cybersecurity---Escalation        |
+|                    |                                                      |                                                                               | Dependency minimization           |
+|                    |                                                      |                                                                               | Cybersecurity---Supply chains     |
+|                    |                                                      |                                                                               | Cybersecurity---Virtualization    |
+|                    |                                                      |                                                                               | TLS                               |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └───C3.4           | Each plaintext output by the decryption process mu.. | Bad mixing.Corruption.EA                                                      | Counted as recorded verifiability |
+|                    |                                                      | Bad decryption.Compromised device.TA                                          | Message signatures                |
+|                    |                                                      | Bad decryption.Compromised device.TST                                         | Trust distribution                |
+|                    |                                                      | Bad decryption.Corruption.TR                                                  | Operational redundancy            |
+|                    |                                                      | Bad decryption.Compromised device.TAS                                         | Cybersecurity---Malware           |
+|                    |                                                      | Bad decryption.Compromised device.EST                                         | Cybersecurity---Intrusion         |
+|                    |                                                      | Bad decryption.Network tampering.AGN                                          | Cybersecurity---Escalation        |
+|                    |                                                      | Bad decryption.Corruption.EA                                                  | Dependency minimization           |
+|                    |                                                      | Bad tabulation.Network tampering.EAN                                          | Cybersecurity---Supply chains     |
+|                    |                                                      |                                                                               | Cybersecurity---Virtualization    |
+|                    |                                                      |                                                                               | TLS                               |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └────C3.4.1        | Each partial decryption of every cryptogram must h.. |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └────C3.4.2        | Each plaintext for every cryptogram must have been.. |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └───C3.5           | The election outcome is correctly computed.          | Bad mixing.Corruption.EA                                                      | Counted as recorded verifiability |
+|                    |                                                      | Bad decryption.Compromised device.TAS                                         | Message signatures                |
+|                    |                                                      | Bad decryption.Compromised device.EST                                         | Trust distribution                |
+|                    |                                                      | Bad decryption.Network tampering.AGN                                          | Operational redundancy            |
+|                    |                                                      | Bad decryption.Corruption.EA                                                  | Cybersecurity---Malware           |
+|                    |                                                      | Bad tabulation.Network tampering.EAN                                          | Cybersecurity---Intrusion         |
+|                    |                                                      |                                                                               | Cybersecurity---Escalation        |
+|                    |                                                      |                                                                               | Dependency minimization           |
+|                    |                                                      |                                                                               | Cybersecurity---Supply chains     |
+|                    |                                                      |                                                                               | Cybersecurity---Virtualization    |
+|                    |                                                      |                                                                               | TLS                               |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └────C3.5.1        | The input to the tabulation algorithm is identical.. |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └────C3.5.2        | The tabulation algorithm is correctly applied.       | Bad tabulation.Compromised device.EAS                                         | Counted as recorded verifiability |
+|                    |                                                      | Bad tabulation.Corruption.EA                                                  | Cybersecurity---Malware           |
+|                    |                                                      |                                                                               | Cybersecurity---Intrusion         |
+|                    |                                                      |                                                                               | Cybersecurity---Escalation        |
+|                    |                                                      |                                                                               | Dependency minimization           |
+|                    |                                                      |                                                                               | Cybersecurity---Supply chains     |
+|                    |                                                      |                                                                               | Cybersecurity---Virtualization    |
+|                    |                                                      |                                                                               | Trust distribution                |
+|                    |                                                      |                                                                               | Operational redundancy            |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └───C3.6           | The set of printed ballots must match one-to-one w.. | Bad printing.Compromised device.TAS                                           | Counted as recorded verifiability |
+|                    |                                                      | Bad printing.Compromised device.BP                                            | Message signatures                |
+|                    |                                                      | Bad printing.Network tampering.AGN                                            | Cybersecurity---Malware           |
+|                    |                                                      | Bad printing.Corruption.EA                                                    | Cybersecurity---Intrusion         |
+|                    |                                                      |                                                                               | Cybersecurity---Escalation        |
+|                    |                                                      |                                                                               | Dependency minimization           |
+|                    |                                                      |                                                                               | Cybersecurity---Supply chains     |
+|                    |                                                      |                                                                               | Cybersecurity---Virtualization    |
+|                    |                                                      |                                                                               | TLS                               |
+|                    |                                                      |                                                                               | Trust distribution                |
+|                    |                                                      |                                                                               | Operational redundancy            |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └───C3.7           | The mixing, decryption, tabulation, and printing p.. | Premature tabulation.Corruption.EA                                            | Trust distribution                |
+|                    |                                                      | Premature tabulation.Corruption.TR                                            | Operational redundancy            |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └─DISPUTE_FREENESS | In general, dispute-freeness refers to the existen.. |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──D1              | A voter claims to have cast a ballot $b$, while th.. | Forged signatures.Forged system signature.SIG                                 | Security proof                    |
+|                    |                                                      | Malicious reporting.Vote receipt replay                                       | Formal verification               |
+|                    |                                                      |                                                                               | External audits                   |
+|                    |                                                      |                                                                               | Dependency minimization           |
+|                    |                                                      |                                                                               | Formally verified dependencies    |
+|                    |                                                      |                                                                               | Audited platforms                 |
+|                    |                                                      |                                                                               | Domain separation                 |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──D2              | A voter claims to have not cast a ballot $b$, whil.. | Forged signatures.Forged voter signature.SIG                                  | Security proof                    |
+|                    |                                                      |                                                                               | Formal verification               |
+|                    |                                                      |                                                                               | External audits                   |
+|                    |                                                      |                                                                               | Dependency minimization           |
+|                    |                                                      |                                                                               | Formally verified dependencies    |
+|                    |                                                      |                                                                               | Audited platforms                 |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──D3              | A voter claims that their device is producing inco.. | Malicious reporting.Malicious reporting of VD                                 |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └─VERIFIABILITY    | Verifiability refers to the ability to verify that.. |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──V1              | Cast-as-intended verifiability                       | Malicious verification application.Cheating ballot checking application.BCA   |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └───V1.1           | Voters must be able to verify {C1.1} for their cry.. |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──V2              | Recorded-as-cast verifiability                       | Malicious verification application.Cheating auditing application.VER          | Cybersecurity---Malware           |
+|                    |                                                      | Malicious bulletin board.Cheating BB---cryptogram check.BB                    | Cybersecurity---Intrusion         |
+|                    |                                                      | Malicious bulletin board.Cheating BB---election audit.BB                      | Cybersecurity---Escalation        |
+|                    |                                                      | Malicious bulletin board.Cheating EA---cryptogram check.EA                    | Dependency minimization           |
+|                    |                                                      | Malicious bulletin board.Cheating EA---election audit.EA                      | Cybersecurity---Supply chains     |
+|                    |                                                      | Malicious bulletin board.Clash attack.EA                                      | Cybersecurity---Virtualization    |
+|                    |                                                      | Malicious bulletin board.Time of Check to Time of Use---Compromised device.BB | Trust distribution                |
+|                    |                                                      | Malicious bulletin board.Time of Check to Time of Use---Corruption.EA         | Operational redundancy            |
+|                    |                                                      |                                                                               | Voter pseudonyms                  |
+|                    |                                                      |                                                                               | Ballot uniqueness audit           |
+|                    |                                                      |                                                                               | Tamper evident bulletin board     |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └───V2.1           | Voters must be able to verify {C2.1} for their cry.. |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──V3              | Counted-as-recorded verifiability                    | Malicious verification application.Cheating auditing application.VER          | Cybersecurity---Malware           |
+|                    |                                                      | Malicious bulletin board.Cheating BB---election audit.BB                      | Cybersecurity---Intrusion         |
+|                    |                                                      | Malicious bulletin board.Cheating EA---election audit.EA                      | Cybersecurity---Escalation        |
+|                    |                                                      | Malicious bulletin board.Time of Check to Time of Use---Compromised device.BB | Dependency minimization           |
+|                    |                                                      | Malicious bulletin board.Time of Check to Time of Use---Corruption.EA         | Cybersecurity---Supply chains     |
+|                    |                                                      | Broken shuffle proofs.Broken cryptography.TA                                  | Cybersecurity---Virtualization    |
+|                    |                                                      | Broken decryption proofs.Broken cryptography.TA                               | Trust distribution                |
+|                    |                                                      |                                                                               | Operational redundancy            |
+|                    |                                                      |                                                                               | Tamper evident bulletin board     |
+|                    |                                                      |                                                                               | Security proof                    |
+|                    |                                                      |                                                                               | Formal verification               |
+|                    |                                                      |                                                                               | External audits                   |
+|                    |                                                      |                                                                               | Formally verified dependencies    |
+|                    |                                                      |                                                                               | Audited platforms                 |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └───V3.1           | Anyone must be able to verify {C3.1.2}, {C3.2}, {C.. |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──V4              | Eligibility verifiability                            | Broken signatures.Broken cryptography.VA                                      | Security proof                    |
+|                    |                                                      | Broken signatures.Broken cryptography.EAS                                     | Formal verification               |
+|                    |                                                      | Broken signatures.Broken cryptography.BCA                                     | External audits                   |
+|                    |                                                      | Compromised signature keys.Phishing.VSIG                                      | Dependency minimization           |
+|                    |                                                      | Eligibility stuffing.Corruption.EA                                            | Formally verified dependencies    |
+|                    |                                                      |                                                                               | Audited platforms                 |
+|                    |                                                      |                                                                               | Auditable pseudonyms              |
+|                    |                                                      |                                                                               | Trust distribution                |
+|                    |                                                      |                                                                               | Operational redundancy            |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └───V4.1           | Anyone must be able to verify {C3.1.1}.              |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └──V5              | Software independence                                |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+| └───V5.1           | An (undetected) change or error in the software ca.. |                                                                               |                                   |
++--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+
+
+❯ python view.py -e attack -t
+Bad decryption
+├── Compromised device (TA)
+├── Compromised device (TST)
+├── Compromised device (TAS)
+├── Compromised device (EST)
+├── Corruption (TR)
+├── Corruption (EA)
+└── Network tampering (AGN)
+Bad mixing
+├── Compromised device (TA)
+├── Compromised device (TAS)
+├── Corruption (TR)
+├── Corruption (EA)
+└── Network tampering (AGN)
+Bad printing
+├── Compromised device (TAS)
+├── Compromised device (BP)
+├── Corruption (EA)
+└── Network tampering (AGN)
+Bad tabulation
+├── Compromised device (EAS)
+├── Corruption (EA)
+└── Network tampering (EAN)
+Ballot tampering
+├── Compromised device (EAS)
+├── Compromised device (BB)
+├── Compromised device (EAA)
+├── Compromised device (EST)
+├── Corruption (EA)
+├── Network tampering (IN)
+└── Network tampering (EAN)
+Broken ballot independence
+├── Ballot copying
+└── Malleability attack
+Broken decryption proofs
+└── Broken cryptography (TA)
+Broken encryption
+└── Broken cryptography (PKE)
+Broken shuffle proofs
+└── Broken cryptography (TA)
+Broken signatures
+├── Broken cryptography (VA)
+├── Broken cryptography (EAS)
+└── Broken cryptography (BCA)
+Compromised key fragments
+├── Compromised device (TA)
+├── Corruption (TR)
+└── Side channel (TA)
+Compromised shuffle data
+├── Compromised device (TA)
+├── Corruption (TR)
+└── Side channel (TA)
+Compromised signature keys
+└── Phishing (VSIG)
+Denial of service
+├── Indiscriminate DoS
+├── Spoofing (VA)
+├── Targeted DoS (Infrastructure)
+└── Targeted DoS (Voters)
+Eligibility stuffing
+└── Corruption (EA)
+Forged signatures
+├── Forged system signature (SIG)
+└── Forged voter signature (SIG)
+Future decryption
+└── Unbounded computation
+Ineligible ballots
+├── Compromised device (EAS)
+├── Compromised device (BB)
+├── Compromised device (AS)
+├── Corruption (EA)
+├── Network tampering (EAN)
+├── Network tampering (EON)
+└── Phishing (CRD)
+Internal sabotage
+├── Election sabotage---Corruption (EA)
+├── Keygen sabotage---Corruption (TR)
+├── Network sabotage (AGN)
+├── Network sabotage (EAN)
+├── Network sabotage (EON)
+├── Subsystem sabotage (SUB)
+└── Tally sabotage---Overwhelming corruption
+Leaked choices
+├── Compromised voting device
+├── Side channel (VD)
+└── Spoofing (VA) (VA)
+Malicious bulletin board
+├── Cheating BB---cryptogram check (BB)
+├── Cheating BB---election audit (BB)
+├── Cheating EA---cryptogram check (EA)
+├── Cheating EA---election audit (EA)
+├── Clash attack (EA)
+├── Time of Check to Time of Use---Compromised device (BB)
+└── Time of Check to Time of Use---Corruption (EA)
+Malicious public key
+└── Corruption (TR)
+Malicious reporting
+├── Malicious reporting of VD
+└── Vote receipt replay
+Malicious verification application
+├── Cheating auditing application (VER)
+└── Cheating ballot checking application (BCA)
+Mismatched encryption
+├── Cheating voting device (VA)
+└── Spoofing (VA) (VA) (VA)
+Physical observation
+└── Shoulder surfing
+Premature tabulation
+├── Corruption (EA)
+└── Corruption (TR)
+Proof of choices
+├── Italian attack
+├── Manual recording
+├── Randomness extraction
+└── Recording malware
+Tally inference attack
+├── Double tally attack---EA (EA)
+├── Double tally attack---TAS (TAS)
+└── Reduced anonymity set
+Unmixed decryption
+├── Compromised device (TA)
+└── Corruption (TR)
+Wrong public key
+├── Compromised device (TAS)
+├── Compromised device (EAS)
+├── Compromised device (EST)
+├── Compromised network (EAN)
+├── Compromised network (IN)
+└── Corruption (EA)
+
+❯ python view.py -e attack
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Attack                                              | Description                                          | Context   | Properties       |
++=====================================================+======================================================+===========+==================+
+| Bad decryption                                      |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | The trustee application decrypts incorrectly.        | TA        | C3.4             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | The trustee application decrypts incorrectly.        | TST       | C3.4             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Corruption                                        | The trustee manipulates the subsystem to decrypt i.. | TR        | C3.4             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | One or more subsystems alter, add or remove decryp.. | TAS       | C3.4, C3.5       |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | One or more subsystems alter, add or remove decryp.. | EST       | C3.4, C3.5       |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Network tampering                                 | The network alters, adds or removes decryption cry.. | AGN       | C3.4, C3.5       |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Corruption                                        | The election administrator alters, adds or removes.. | EA        | C3.4, C3.5       |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Bad mixing                                          |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | The trustee application shuffles incorrectly.        | TA        | C3.2             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Corruption                                        | The trustee manipulates the subsystem to shuffle i.. | TR        | C3.2             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | The trustee application server alters, adds or rem.. | TAS       | C3.2, C3.3       |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Network tampering                                 | The network alters, adds or removes mix cryptogram.. | AGN       | C3.2, C3.3       |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Corruption                                        | The election administrator alters, adds or removes.. | EA        | C3.4, C3.5       |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Bad printing                                        |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | The trustee administration server sends plaintexts.. | TAS       | C3.6             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | The ballot printer prints ballots from plaintexts .. | BP        | C3.6             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Network tampering                                 | The network alters, adds, or removes plaintexts se.. | AGN       | C3.6             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Corruption                                        | The election administrator manipulates the set of .. | EA        | C3.6             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Bad tabulation                                      |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Network tampering                                 | The network alters, adds or removes plaintexts.      | EAN       | C3.4, C3.5       |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | The election administration server applies the tab.. | EAS       | C3.5.2           |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Corruption                                        | The election administrator manipulates the subsyst.. | EA        | C3.5.2           |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Ballot tampering                                    |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Network tampering                                 | The network adds, alters or removes cryptograms.     | IN        | C2.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Network tampering                                 | The network adds, alters or removes cryptograms.     | EAN       | C2.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | One or more subsystems alters or removes cryptogra.. | EAS       | C2.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | One or more subsystems alters or removes cryptogra.. | BB        | C2.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | One or more subsystems alters or removes cryptogra.. | EAA       | C2.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | One or more subsystems alters or removes cryptogra.. | EST       | C2.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Corruption                                        | The election administrator alters or removes crypt.. | EA        | C2.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Broken ballot independence                          |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Malleability attack                               | An adversary uses encryption malleability to const.. | None      | P1               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Ballot copying                                    | An adversary copies a target ballot to reveal it, .. | None      | P1               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Broken decryption proofs                            |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Broken cryptography                               | Decryption proofs do not prove decryption correctn.. | TA        | V3               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Broken encryption                                   |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Broken cryptography                               | The cipher used to encrypt ballots is broken.        | PKE       | P1.2             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Broken shuffle proofs                               |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Broken cryptography                               | Shuffle proofs do not prove shuffle correctness.     | TA        | V3               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Broken signatures                                   |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Broken cryptography                               | Ballot signatures do not prove eligibility.          | VA        | V4               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Broken cryptography                               | Ballot signatures do not prove eligibility.          | EAS       | V4               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Broken cryptography                               | Ballot signatures do not prove eligibility.          | BCA       | V4               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Compromised key fragments                           |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | Key fragments are leaked by the trustee applicatio.. | TA        | P1.2             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Corruption                                        | Key fragments are leaked by trustees.                | TR        | P1.2             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Side channel                                      | A side channel leaks key fragments.                  | TA        | P1.2             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Compromised shuffle data                            |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | Shuffle permutations or random factors are leaked .. | TA        | P1.3             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Corruption                                        | Shuffle permutations or random factors are leaked .. | TR        | P1.3             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Side channel                                      | A side channel leaks permutations or random factor.. | TA        | P1.3             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Compromised signature keys                          |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Phishing                                          | The voter is deceived into revealing their ballot .. | VSIG      | V4               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Denial of service                                   |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Targeted DoS (Infrastructure)                     | One or more components of the system infrastructur.. | None      | A1, A2           |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Indiscriminate DoS                                | Internet infrastructure as a whole in one or more .. | None      | A1, A2           |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Targeted DoS (Voters)                             | A specific voter or group of voters is targeted by.. | None      | A1, A2           |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Spoofing                                          | The voter is deceived into voting through a counte.. | VA        | C1.1, P1, A1, A2 |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Eligibility stuffing                                |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Corruption                                        | The election administrator falsely identifies arbi.. | EA        | V4               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Forged signatures                                   |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Forged system signature                           | The voter forges a system signature on a ballot th.. | SIG       | D1               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Forged voter signature                            | The election authority forges a voter signature on.. | SIG       | D2               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Future decryption                                   |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Unbounded computation                             | A future computationally unbounded adversary break.. | None      | P2               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Ineligible ballots                                  |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | One or more subsystems operate such that the ballo.. | EAS       | C2.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | One or more subsystems operate such that the ballo.. | BB        | C2.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Corruption                                        | The election administrator manipulates a subsystem.. | EA        | C2.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Network tampering                                 | The network adds ineligible cryptograms during inp.. | EAN       | C3.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Network tampering                                 | The network adds ineligible cryptograms during inp.. | EON       | C3.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | The authentication service works incorrectly.        | AS        | C3.1.1           |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Phishing                                          | The voter is deceived into revealing their authent.. | CRD       | C3.1.1           |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Internal sabotage                                   |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Subsystem sabotage                                | One or more subsystems fail to operate in a timely.. | SUB       | A1, A2, A3, A4   |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Network sabotage                                  | One or more networks fail to operate in a timely f.. | AGN       | A1, A2, A3, A4   |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Network sabotage                                  | One or more networks fail to operate in a timely f.. | EAN       | A1, A2, A3, A4   |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Network sabotage                                  | One or more networks fail to operate in a timely f.. | EON       | A1, A2, A3, A4   |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Tally sabotage---Overwhelming corruption          | A number of trustees sufficient to prevent decrypt.. | None      | A3               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Keygen sabotage---Corruption                      | One or more trustees choose not to participate, or.. | TR        | A4               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Election sabotage---Corruption                    | The election authority disrupts the election.        | EA        | A1, A2, A3, A4   |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Leaked choices                                      |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised voting device                         | The voter's choices are recorded and leaked by the.. | None      | P1.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Side channel                                      | A side channel leaks voter's choices.                | VD        | P1.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Spoofing                                          | The voter is deceived into voting through a counte.. | VA        | C1.1, P1, A1, A2 |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Malicious bulletin board                            |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Cheating BB---cryptogram check                    | The bulletin board does not provide correct inform.. | BB        | V2               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Cheating BB---election audit                      | The bulletin board does not provide correct electi.. | BB        | V2, V3           |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Cheating EA---cryptogram check                    | The election administrator manipulates the bulleti.. | EA        | V2               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Cheating EA---election audit                      | The election administrator manipulates the bulleti.. | EA        | V2, V3           |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Clash attack                                      | The voting application encrypts identical votes wi.. | EA        | V2               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Time of Check to Time of Use---Compromised device | The bulletin board removes cryptograms between use.. | BB        | V2, V3           |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Time of Check to Time of Use---Corruption         | The election administrator manipulates the bulleti.. | EA        | V2, V3           |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Malicious public key                                |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Corruption                                        | Trustees compute the public key maliciously.         | TR        | P1.2             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Malicious reporting                                 |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Malicious reporting of VD                         | A sufficient number of voters falsely claim that t.. | None      | A1, D3           |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Vote receipt replay                               | A voter presents a receipt for a previous election.. | None      | D1               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Malicious verification application                  |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Cheating ballot checking application              | The checking application does not provide correct .. | BCA       | V1               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Cheating auditing application                     | The checking application does not perform election.. | VER       | V2, V3           |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Mismatched encryption                               |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Cheating voting device                            | The voting application encrypts a cryptogram that .. | VA        | C1.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Spoofing                                          | The voter is deceived into voting through a counte.. | VA        | C1.1, P1, A1, A2 |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Physical observation                                |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Shoulder surfing                                  | The voter is physically observed while using the v.. | None      | P1               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Premature tabulation                                |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Corruption                                        | Several actors cooperate to produce a premature ta.. | EA        | C3.7             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Corruption                                        | Several actors cooperate to produce a premature ta.. | TR        | C3.7             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Proof of choices                                    |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Randomness extraction                             | The randomness used in encryption is extracted fro.. | None      | P3.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Italian attack                                    | The voter emulates a signature by encoding a uniqu.. | None      | P3.1             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Recording malware                                 | The voting device records and exfiltrates the enti.. | None      | P1               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Manual recording                                  | The voter records their own entire voting session,.. | None      | P3.2             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Tally inference attack                              |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Reduced anonymity set                             | The number of participating voters is small enough.. | None      | P1               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Double tally attack---EA                          | The election administrator rewinds the protocol an.. | EA        | P1               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Double tally attack---TAS                         | The trustee application server rewinds the protoco.. | TAS       | P1               |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Unmixed decryption                                  |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | Unmixed ciphertexts are decrypted and leaked by th.. | TA        | P1.4             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Corruption                                        | Unmixed ciphertexts are decrypted and leaked by tr.. | TR        | P1.4             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| Wrong public key                                    |                                                      | None      |                  |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | One or more subsystems replace the election public.. | TAS       | P1.2             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | One or more subsystems replace the election public.. | EAS       | P1.2             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised device                                | One or more subsystems replace the election public.. | EST       | P1.2             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised network                               | One or more networks replace the election public k.. | EAN       | P1.2             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| ├─Compromised network                               | One or more networks replace the election public k.. | IN        | P1.2             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+| └─Corruption                                        | The election administrator replaces the election p.. | EA        | P1.2             |
++-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
+
+❯ python view.py -e mitigation
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Mitigation                        | Description                                          | Attack line                                                                                |
++===================================+======================================================+============================================================================================+
+| Append-only trustee board         | Each trustee maintains a local, append-only view o.. | Tally inference attack > Double tally attack---EA (EA) > Append-only trustee board         |
+|                                   |                                                      | Tally inference attack > Double tally attack---TAS (TAS) > Append-only trustee board       |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Auditable pseudonyms              | Pseudonyms can be constructed from auditable, but .. | Eligibility stuffing > Corruption (EA) > Auditable pseudonyms                              |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Ballot uniqueness audit           | From KÃ¼sters et al.~{[[KustersEtAlClashAttacks201.. | Malicious bulletin board > Clash attack (EA) > Ballot uniqueness audit                     |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Ballot weeding                    | Duplicates are removed from the set of ballots sub.. | Broken ballot independence > Ballot copying > Ballot weeding                               |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Cast as intended verifiability    | A voter can verify that their ballot was cast as t.. | Mismatched encryption > Cheating voting device (VA) > Cast as intended verifiability       |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Controlled environment            | The physical location housing the {AGN} as well as.. | Compromised key fragments > Side channel (TA) > Controlled environment                     |
+|                                   |                                                      | Compromised shuffle data > Side channel (TA) > Controlled environment                      |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Counted as recorded verifiability | A voter can verify that their ballot was counted.    | Bad decryption > Compromised device (EST) > Counted as recorded verifiability              |
+|                                   |                                                      | Bad decryption > Compromised device (TA) > Counted as recorded verifiability               |
+|                                   |                                                      | Bad decryption > Compromised device (TAS) > Counted as recorded verifiability              |
+|                                   |                                                      | Bad decryption > Compromised device (TST) > Counted as recorded verifiability              |
+|                                   |                                                      | Bad decryption > Corruption (EA) > Counted as recorded verifiability                       |
+|                                   |                                                      | Bad decryption > Corruption (TR) > Counted as recorded verifiability                       |
+|                                   |                                                      | Bad decryption > Network tampering (AGN) > Counted as recorded verifiability               |
+|                                   |                                                      | Bad mixing > Compromised device (TA) > Counted as recorded verifiability                   |
+|                                   |                                                      | Bad mixing > Compromised device (TAS) > Counted as recorded verifiability                  |
+|                                   |                                                      | Bad mixing > Corruption (EA) > Counted as recorded verifiability                           |
+|                                   |                                                      | Bad mixing > Corruption (TR) > Counted as recorded verifiability                           |
+|                                   |                                                      | Bad mixing > Network tampering (AGN) > Counted as recorded verifiability                   |
+|                                   |                                                      | Bad printing > Compromised device (BP) > Counted as recorded verifiability                 |
+|                                   |                                                      | Bad printing > Compromised device (TAS) > Counted as recorded verifiability                |
+|                                   |                                                      | Bad printing > Network tampering (AGN) > Counted as recorded verifiability                 |
+|                                   |                                                      | Bad tabulation > Compromised device (EAS) > Counted as recorded verifiability              |
+|                                   |                                                      | Bad tabulation > Corruption (EA) > Counted as recorded verifiability                       |
+|                                   |                                                      | Bad tabulation > Network tampering (EAN) > Counted as recorded verifiability               |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Denial of service protection      | Standard denial of service protection techniques, .. | Denial of service > Targeted DoS (Infrastructure) > Denial of service protection           |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Domain separation                 | Cryptographic primitives are used in a way that en.. | Malicious reporting > Vote receipt replay > Domain separation                              |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Eligibility verifiability         | An independent verifier can verify that no ineligi.. | Ineligible ballots > Compromised device (AS) > Eligibility verifiability                   |
+|                                   |                                                      | Ineligible ballots > Compromised device (BB) > Eligibility verifiability                   |
+|                                   |                                                      | Ineligible ballots > Compromised device (EAS) > Eligibility verifiability                  |
+|                                   |                                                      | Ineligible ballots > Corruption (EA) > Eligibility verifiability                           |
+|                                   |                                                      | Ineligible ballots > Network tampering (EAN) > Eligibility verifiability                   |
+|                                   |                                                      | Ineligible ballots > Network tampering (EON) > Eligibility verifiability                   |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Message signatures                | Messages on the network are digitally signed.        | Bad decryption > Compromised device (EST) > Message signatures                             |
+|                                   |                                                      | Bad decryption > Compromised device (TAS) > Message signatures                             |
+|                                   |                                                      | Bad decryption > Corruption (EA) > Message signatures                                      |
+|                                   |                                                      | Bad mixing > Compromised device (TAS) > Message signatures                                 |
+|                                   |                                                      | Bad mixing > Corruption (EA) > Message signatures                                          |
+|                                   |                                                      | Bad printing > Compromised device (TAS) > Message signatures                               |
+|                                   |                                                      | Bad printing > Corruption (EA) > Message signatures                                        |
+|                                   |                                                      | Wrong public key > Compromised device (EAS) > Message signatures                           |
+|                                   |                                                      | Wrong public key > Compromised device (EST) > Message signatures                           |
+|                                   |                                                      | Wrong public key > Compromised device (TAS) > Message signatures                           |
+|                                   |                                                      | Wrong public key > Compromised network (EAN) > Message signatures                          |
+|                                   |                                                      | Wrong public key > Compromised network (IN) > Message signatures                           |
+|                                   |                                                      | Wrong public key > Corruption (EA) > Message signatures                                    |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Non-malleable cryptosystem        | A CCA2-secure cryptosystem (e.g., Naor-Yung) is us.. | Broken ballot independence > Malleability attack > Non-malleable cryptosystem              |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Operational redundancy            | The use of redundant subsystems or actors allows i.. | Internal sabotage > Network sabotage (AGN) > Operational redundancy                        |
+|                                   |                                                      | Internal sabotage > Network sabotage (EAN) > Operational redundancy                        |
+|                                   |                                                      | Internal sabotage > Network sabotage (EON) > Operational redundancy                        |
+|                                   |                                                      | Internal sabotage > Subsystem sabotage (SUB) > Operational redundancy                      |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Proof of plaintext knowledge      | Zero-knowledge proofs of plaintext knowledge attac.. | Broken ballot independence > Malleability attack > Proof of plaintext knowledge            |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Recorded as cast verifiability    | A voter can verify that their recorded ballot is i.. | Ballot tampering > Compromised device (BB) > Recorded as cast verifiability                |
+|                                   |                                                      | Ballot tampering > Compromised device (EAA) > Recorded as cast verifiability               |
+|                                   |                                                      | Ballot tampering > Compromised device (EAS) > Recorded as cast verifiability               |
+|                                   |                                                      | Ballot tampering > Compromised device (EST) > Recorded as cast verifiability               |
+|                                   |                                                      | Ballot tampering > Corruption (EA) > Recorded as cast verifiability                        |
+|                                   |                                                      | Ballot tampering > Network tampering (EAN) > Recorded as cast verifiability                |
+|                                   |                                                      | Ballot tampering > Network tampering (IN) > Recorded as cast verifiability                 |
+|                                   |                                                      | Mismatched encryption > Cheating voting device (VA) > Recorded as cast verifiability       |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Security proof                    | A security proof of the protocol provides evidence.. | Broken encryption > Broken cryptography (PKE) > Security proof                             |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Tamper evident bulletin board     | A hash chain is used to implement the bulletin boa.. | Malicious bulletin board > Time of Check to Time of Use---Compromised device (BB) > Tamper |
+|                                   |                                                      |  evident bulletin board                                                                    |
+|                                   |                                                      | Malicious bulletin board > Time of Check to Time of Use---Corruption (EA) > Tamper evident |
+|                                   |                                                      |  bulletin board                                                                            |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Trust distribution                | The actor's role is distributed such that the coop.. | Compromised key fragments > Compromised device (TA) > Trust distribution                   |
+|                                   |                                                      | Compromised shuffle data > Compromised device (TA) > Trust distribution                    |
+|                                   |                                                      | Unmixed decryption > Compromised device (TA) > Trust distribution                          |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Voter pseudonyms                  | Data published to achieve {M4} (Eligibility verifi.. | Future decryption > Unbounded computation > Voter pseudonyms                               |
+|                                   |                                                      | Malicious bulletin board > Clash attack (EA) > Voter pseudonyms                            |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| Voter specific Naor-Yung proofs   | Ballot cryptogram Naor-Yung proofs are made voter-.. | Broken ballot independence > Ballot copying > Voter specific Naor-Yung proofs              |
++-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
+
+❯ python view.py -e context
++------------------------------------+-----------+---------------+
+| Name                               | Kind      | Description   |
++====================================+===========+===============+
+| Air-Gapped Network                 | Network   |               |
++------------------------------------+-----------+---------------+
+| All subsystems                     | Subsystem |               |
++------------------------------------+-----------+---------------+
+| Authentication Service             | Subsystem |               |
++------------------------------------+-----------+---------------+
+| Ballot Box                         | Subsystem |               |
++------------------------------------+-----------+---------------+
+| Ballot Check Application           | Subsystem |               |
++------------------------------------+-----------+---------------+
+| Ballot Printer                     | Subsystem |               |
++------------------------------------+-----------+---------------+
+| Decryption Proof                   | Primitive |               |
++------------------------------------+-----------+---------------+
+| Digital Signature                  | Primitive |               |
++------------------------------------+-----------+---------------+
+| Election Administration Network    | Network   |               |
++------------------------------------+-----------+---------------+
+| Election Administration Server     | Subsystem |               |
++------------------------------------+-----------+---------------+
+| Election Administration Storage    | Subsystem |               |
++------------------------------------+-----------+---------------+
+| Election Administrator             | Actor     |               |
++------------------------------------+-----------+---------------+
+| Election Administrator Application | Subsystem |               |
++------------------------------------+-----------+---------------+
+| Election Office Network            | Network   |               |
++------------------------------------+-----------+---------------+
+| Internet                           | Network   |               |
++------------------------------------+-----------+---------------+
+| Proof of Plaintext Knowledge       | Primitive |               |
++------------------------------------+-----------+---------------+
+| Public Bulletin Board              | Subsystem |               |
++------------------------------------+-----------+---------------+
+| Public key encryption              | Primitive |               |
++------------------------------------+-----------+---------------+
+| Shuffle Proof                      | Primitive |               |
++------------------------------------+-----------+---------------+
+| Trustee                            | Actor     |               |
++------------------------------------+-----------+---------------+
+| Trustee Administration Server      | Subsystem |               |
++------------------------------------+-----------+---------------+
+| Trustee Application                | Subsystem |               |
++------------------------------------+-----------+---------------+
+| Trustee Storage                    | Subsystem |               |
++------------------------------------+-----------+---------------+
+| Verifier Application               | Subsystem |               |
++------------------------------------+-----------+---------------+
+| Voter                              | Actor     |               |
++------------------------------------+-----------+---------------+
+| Voter credentials                  | Data      |               |
++------------------------------------+-----------+---------------+
+| Voter signature keys               | Data      |               |
++------------------------------------+-----------+---------------+
+| Voting Application                 | Subsystem |               |
++------------------------------------+-----------+---------------+
+| Voting Device                      | Subsystem |               |
++------------------------------------+-----------+---------------+
+
+❯ python view.py -e outstanding
++----------------------+
+| Attack outstanding   |
++======================+
++----------------------+

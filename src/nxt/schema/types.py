@@ -268,7 +268,7 @@ class Attack(BaseModel):
     
     id: str = Field(..., description="Unique identifier")
     name: str = Field(..., description="Human-readable name")
-    description: str = Field(..., description="What this attack does")
+    description: Optional[str] = Field(default=None, description="What this attack does")
     
     # Relationships
     variant_of: Optional[AttackPattern] = Field(
