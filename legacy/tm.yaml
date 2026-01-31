@@ -1151,7 +1151,7 @@ attacks:
       properties: [D1]
       description: A voter presents a receipt for a previous election as a receipt
         for the current election, claiming that their cryptogram should be present
-        in the bulletin board but is not
+        in the bulletin board but is not.
     mitigations:
       -
         - Domain separation

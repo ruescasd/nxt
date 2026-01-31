@@ -1,9 +1,8 @@
 This file shows the results of running view.py on our legacy tm.yaml threat model. First we show
 the help screen for the command, and then the results for each of the commands shown as examples.
-Not all examples are represented at the moment, commands that specify a root node (-r) are not
+Not all examples are represented at the moment, some commands that specify a root node (-r) are not
 yet included, these are:
 
-./view.py -e property -t -r my_property     # prints properties tree, starting at 'my_property'
 ./view.py -e attack -r my_attack            # prints attacks table, starting at my_attack
 ./view.py -e mitigation -r my_attack        # prints mitigations table for attack 'my_attack'
 ./view.py -e mitigation -r my_attack -t     # prints mitigations tree for attack 'my_attack'
@@ -90,6 +89,34 @@ INTEGRITY The e-voting properties of Accuracy, Eligibility, Fairness, Verifiabil
     │   └── V4.1 Anyone must be able to verify {C3.1.1}.
     └── V5 Software independence
         └── V5.1 An (undetected) change or error in the software ca..
+
+❯ python view.py -e property -t -r CONFIDENTIALITY
+CONFIDENTIALITY The e-voting properties of Privacy, Everlasting privacy, Receipt-freeness, and Coercion-resistance are mapped to this security objective.
+├── P1 It must not be possible to link a voter to their v..
+│   ├── P1.1 The only information on voter selections leaked by..
+│   ├── P1.2 It must not be possible for anyone to decrypt cryp..
+│   ├── P1.3 It must not be possible for anyone to determine th..
+│   └── P1.4 The decryption process must only operate on crypto..
+├── P2 It must not be possible for future computationally..
+└── P3 It must not be possible for a voter to prove how t..
+    ├── P3.1 A voter does not gain a receipt that can be used t..
+    └── P3.2 A voter cannot cooperate with a coercer to prove t..
+
+❯ python view.py -e property -t -r C3
+C3 Recorded votes are correctly counted.
+├── C3.1 The set of cryptograms input to the mixing process..
+│   ├── C3.1.1 Each cryptogram input to the mixing process must m..
+│   └── C3.1.2 Each cryptogram input to the mixing process must m..
+├── C3.2 The set of cryptograms output by the mixing proces..
+├── C3.3 The set of cryptograms input to the decryption pro..
+├── C3.4 Each plaintext output by the decryption process mu..
+│   ├── C3.4.1 Each partial decryption of every cryptogram must h..
+│   └── C3.4.2 Each plaintext for every cryptogram must have been..
+├── C3.5 The election outcome is correctly computed.
+│   ├── C3.5.1 The input to the tabulation algorithm is identical..
+│   └── C3.5.2 The tabulation algorithm is correctly applied.
+├── C3.6 The set of printed ballots must match one-to-one w..
+└── C3.7 The mixing, decryption, tabulation, and printing p..
 
 ❯ python view.py -e property
 +--------------------+------------------------------------------------------+-------------------------------------------------------------------------------+-----------------------------------+

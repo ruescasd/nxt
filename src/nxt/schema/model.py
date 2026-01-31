@@ -164,14 +164,24 @@ class ThreatModel(BaseModel):
         return result
     
     def _get_pattern_mitigations(self, pattern: AttackPattern) -> list[tuple[Mitigation, str]]:
-        """Recursively collect mitigations from a pattern and its ancestors."""
+        """
+        Collect mitigations from a pattern and all its descendants.
+        
+        In the legacy model, when an attack is instance_of a pattern, it inherits
+        mitigations from ALL children of that pattern. For example, an attack that
+        is instance_of 'Compromised device' inherits mitigations from Malware,
+        Intrusion, Escalation, etc. (all children of Compromised device).
+        """
         result: list[tuple[Mitigation, str]] = []
         
+        # Mitigations on this pattern
         for ma in pattern.mitigations:
             result.append((ma.mitigation, ma.rationale))
         
-        if pattern.refines:
-            result.extend(self._get_pattern_mitigations(pattern.refines))
+        # Mitigations from all child patterns (patterns that refine this one)
+        for child_pattern in self.patterns:
+            if child_pattern.refines and child_pattern.refines.id == pattern.id:
+                result.extend(self._get_pattern_mitigations(child_pattern))
         
         return result
     

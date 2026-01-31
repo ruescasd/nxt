@@ -36,7 +36,7 @@ cheating_voting_device = Attack(
         ),
         MitigationApplication(
             mitigation=mit.recorded_as_cast,
-            rationale="Ballot tracker checks on the bulletin board will detect covert submit-and-cast of mismatched ciphertexts.",
+            rationale="Ballot tracker checks on the bulletin boad will detect covert submit-and-cast of mismatched ciphertexts. For a single compromised device, this checking pocess (assuming it is carried out by the voter using a different, uncompromised device) detects this attack, though only if the voter carries it out. For large scale attacks that compromise multiple devices, the ballot tracking check detects this attack with high probability if enough voters carry it out using uncompromised devices. If this mitigation is successful, the attack may be thwarted for the voter, or becomes an attack on availability, depending on whether the voter has a recourse to correct  their submission. If the voter has a correcting recourse, the attack is thwarted for that voter.  If the voter's recourse is restricted to reporting and canceling the ballot, the attack is on {A1}. Finally, if a procedure is in place whereby an election outcome is invalidated if a sufficient number of voters make reports of mismatched ciphertexts, the attack is additionally on {A3}. See also Malicious reporting.",
         ),
     ],
 )
@@ -339,7 +339,7 @@ bad_mixing_device_tas = Attack(
         ),
         MitigationApplication(
             mitigation=mit.message_signatures,
-            rationale="Trustees sign messages as part of the shuffling protocol. The TAS would need to forge these signatures to carry out the attack while evading detection.",
+            rationale="Trustees sign messages as part of the shuffling protocol. The {TAS} would need to forge these signatures to carry out the attack while evading detection.",
         ),
     ],
 )
@@ -375,7 +375,7 @@ bad_mixing_corruption_ea = Attack(
         ),
         MitigationApplication(
             mitigation=mit.message_signatures,
-            rationale="Trustees sign messages as part of the shuffling protocol. The EA would need to forge these signatures to carry out the attack while evading detection.",
+            rationale="Trustees sign messages as part of the shuffling protocol. The {EA} would need to forge these signatures to carry out the attack while evading detection.",
         ),
     ],
 )
@@ -452,7 +452,7 @@ bad_decryption_device_tas = Attack(
         ),
         MitigationApplication(
             mitigation=mit.message_signatures,
-            rationale="Trustees sign messages as part of the shuffling protocol. The TAS/EST would need to forge these signatures to carry out the attack while evading detection.",
+            rationale="Trustees sign messages as part of the shuffling protocol. The {TAS}/{EST} would need to forge these signatures to carry out the attack while evading detection.",
         ),
     ],
 )
@@ -472,7 +472,7 @@ bad_decryption_device_est = Attack(
         ),
         MitigationApplication(
             mitigation=mit.message_signatures,
-            rationale="Trustees sign messages as part of the shuffling protocol. The TAS/EST would need to forge these signatures to carry out the attack while evading detection.",
+            rationale="Trustees sign messages as part of the shuffling protocol. The {TAS}/{EST} would need to forge these signatures to carry out the attack while evading detection.",
         ),
     ],
 )
@@ -508,7 +508,7 @@ bad_decryption_corruption_ea = Attack(
         ),
         MitigationApplication(
             mitigation=mit.message_signatures,
-            rationale="Trustees sign messages as part of the shuffling protocol. The EA would need to forge these signatures to carry out the attack while evading detection.",
+            rationale="Trustees sign messages as part of the shuffling protocol. The {EA} would need to forge these signatures to carry out the attack while evading detection.",
         ),
     ],
 )
@@ -594,7 +594,7 @@ bad_printing_device_tas = Attack(
         ),
         MitigationApplication(
             mitigation=mit.message_signatures,
-            rationale="Trustees sign messages as part of the shuffling protocol. The TAS would need to forge these signatures to carry out the attack while evading detection.",
+            rationale="Trustees sign messages as part of the shuffling protocol. The {TAS} would need to forge these signatures to carry out the attack while evading detection.",
         ),
     ],
 )
@@ -642,7 +642,7 @@ bad_printing_corruption_ea = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.message_signatures,
-            rationale="Trustees sign messages as part of the shuffling protocol. The EA would need to forge these signatures to carry out the attack while evading detection.",
+            rationale="Trustees sign messages as part of the shuffling protocol. The {EA} would need to forge these signatures to carry out the attack while evading detection.",
         ),
     ],
 )
@@ -754,7 +754,7 @@ cheating_bb_election_audit = Attack(
 cheating_ea_cryptogram_check = Attack(
     id="cheating_ea_cryptogram_check",
     name="Cheating EA---cryptogram check",
-    description="The election administrator manipulates the bulletin board such that it does not provide correct information about cryptograms in the ballot box.",
+    description="The election administrator manipulates the bulletin board such that it does not not provide correct information about cryptograms in the ballot box.",
     variant_of=pat.corruption,
     achieves=[malicious_bulletin_board],
     occurs_in=[ctx.EA],
@@ -764,7 +764,7 @@ cheating_ea_cryptogram_check = Attack(
 cheating_ea_election_audit = Attack(
     id="cheating_ea_election_audit",
     name="Cheating EA---election audit",
-    description="The election administrator manipulates the bulletin board such that it does not provide correct election auditing information.",
+    description="The election administrator manipulates the bulletin board such that it does not not provide correct election auditing information.",
     variant_of=pat.corruption,
     achieves=[malicious_bulletin_board],
     occurs_in=[ctx.EA],
@@ -1075,7 +1075,7 @@ leaked_choices_side_channel = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=OUT_OF_SCOPE,
-            rationale="It is impossible to prevent adversaries from observing voter devices in the uncontrolled and practically unlimited range of environments in which a user may interact with the VA.",
+            rationale="It is impossible to prevent adversaries from observing voter devices in the uncontrolled and practically unlimited range of environments in which a user may interact with the {VA}.",
         ),
     ],
 )
@@ -1126,7 +1126,7 @@ compromised_key_fragments_side_channel = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.controlled_environment,
-            rationale="Physical proximity necessary to observe indirect signals emerging from the TA and related systems will be restricted. Adversaries will not be able to exploit a side channel to extract key fragments.",
+            rationale="Physical proximity necessary to observe indirect signals emerging from the {TA} and related systems will be restricted. Adversaries will not be able to exploit a side channel to extract key fragments. However, corrupt trustees could potentially exploit such side channels to extract other trustees' keys.",
         ),
     ],
 )
@@ -1177,7 +1177,7 @@ compromised_shuffle_data_side_channel = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.controlled_environment,
-            rationale="Physical proximity necessary to observe indirect signals emerging from the TA and related systems will be restricted. Adversaries will not be able to exploit a side channel to extract permutations or random factors.",
+            rationale="Physical proximity necessary to observe indirect signals emerging from the {TA} and related systems will be restricted. Adversaries will not be able to exploit a side channel to extract permutations or random factors.",
         ),
     ],
 )
@@ -1309,7 +1309,7 @@ broken_ballot_independence = Attack(
 malleability_attack = Attack(
     id="malleability_attack",
     name="Malleability attack",
-    description="An adversary uses encryption malleability to construct a ballot related to a target ballot to reveal it.",
+    description="An adversary uses encryption malleability to construct a ballot related to a target ballot to reveal it [BPW16].",
     achieves=[broken_ballot_independence],
     targets=[prop.P1],
     mitigations=[
@@ -1362,7 +1362,7 @@ wrong_public_key_device_tas = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.message_signatures,
-            rationale="Trustees sign messages as part of the key generation protocol. Assuming that the VA validates the signatures on received public keys, the compromised devices would need to forge these signatures to carry out the attack.",
+            rationale="Trustees sign messages as part of the key generation protocol. Assuming that the {VA} validates the signatures on received public keys, the compromised devices would need to forge these signatures to carry out the attack.",
         ),
     ],
 )
@@ -1378,7 +1378,7 @@ wrong_public_key_device_eas = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.message_signatures,
-            rationale="Trustees sign messages as part of the key generation protocol. Assuming that the VA validates the signatures on received public keys, the compromised devices would need to forge these signatures to carry out the attack.",
+            rationale="Trustees sign messages as part of the key generation protocol. Assuming that the {VA} validates the signatures on received public keys, the compromised devices would need to forge these signatures to carry out the attack.",
         ),
     ],
 )
@@ -1394,7 +1394,7 @@ wrong_public_key_device_est = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.message_signatures,
-            rationale="Trustees sign messages as part of the key generation protocol. Assuming that the VA validates the signatures on received public keys, the compromised devices would need to forge these signatures to carry out the attack.",
+            rationale="Trustees sign messages as part of the key generation protocol. Assuming that the {VA} validates the signatures on received public keys, the compromised devices would need to forge these signatures to carry out the attack.",
         ),
     ],
 )
@@ -1410,7 +1410,7 @@ wrong_public_key_network_ean = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.message_signatures,
-            rationale="Trustees sign messages as part of the key generation protocol. Assuming that the VA validates the signatures on received public keys, the compromised networks would need to forge these signatures to carry out the attack.",
+            rationale="Trustees sign messages as part of the key generation protocol. Assuming that the {VA} validates the signatures on received public keys, the compromised networks would need to forge these signatures to carry out the attack.",
         ),
     ],
 )
@@ -1426,7 +1426,7 @@ wrong_public_key_network_in = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.message_signatures,
-            rationale="Trustees sign messages as part of the key generation protocol. Assuming that the VA validates the signatures on received public keys, the compromised networks would need to forge these signatures to carry out the attack.",
+            rationale="Trustees sign messages as part of the key generation protocol. Assuming that the {VA} validates the signatures on received public keys, the compromised networks would need to forge these signatures to carry out the attack.",
         ),
     ],
 )
@@ -1442,7 +1442,7 @@ wrong_public_key_corruption_ea = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.message_signatures,
-            rationale="Trustees sign messages as part of the key generation protocol. Assuming that the VA validates the signatures on received public keys, the EA would need to forge these signatures to carry out the attack.",
+            rationale="Trustees sign messages as part of the key generation protocol. Assuming that the {VA} validates the signatures on received public keys, the EA would need to forge these signatures to carry out the attack.",
         ),
     ],
 )
@@ -1513,7 +1513,7 @@ randomness_extraction = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=OUT_OF_SCOPE,
-            rationale="If a voter is sufficiently motivated and has sufficient knowledge/skill to extract the randomness used in encryption of their own vote, the system cannot stop them from doing so.",
+            rationale="If a voter is sufficiently motivated and has sufficient knowledge/skill to extract the randomness used in encryption of their own vote (by any means, ranging from low-level debugging on-device to replacing the application with a counterfeit that reveals the randomness), the system cannot stop them from doing so. However, in the absence of such a motivated and skilled voter, this attack can be mitigated using the same techniques that mitigate against counterfeit voter/ballot-checking applications generally, as the real voting/ballot-checking application will never reveal the randomness used in encryption of a cast ballot.",
         ),
     ],
 )
@@ -1556,7 +1556,7 @@ manual_recording = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=OUT_OF_SCOPE,
-            rationale="It is not possible for the system to prevent a voter from using a completely separate video recording device to record their own voting session in its entirety.",
+            rationale="While it is possible on some platforms to mitigate this attack with respect to on-device screen recording capabilities (by either disabling/restricting screen recording, or corrupting/obstructing screen recordings when they are detected), it is not possible for the system to prevent a voter from using a completely separate video recording device to record their own voting session in its entirety. This is, essentially, the digital analogue to {Physical observation.Shoulder surfing} (Shoulder surfing).",
         ),
     ],
 )
@@ -1578,7 +1578,7 @@ denial_of_service = Attack(
 targeted_dos_infrastructure = Attack(
     id="targeted_dos_infrastructure",
     name="Targeted DoS (Infrastructure)",
-    description="One or more components of the system infrastructure are targeted by a denial of service attack preventing timely access to the voting system.",
+    description="One or more components of the system infrastructure are targeted by a denial of service attack preventing timely access to the voting system (e.g., an attack on the authentication service preventing authentication of voters).",
     achieves=[denial_of_service],
     targets=[prop.A1, prop.A2],
     mitigations=[
@@ -1628,7 +1628,7 @@ spoofing_attack = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=OUT_OF_SCOPE,
-            rationale="If a sufficiently capable counterfeit application exists, and a voter is deceived into voting with it, it can effectively carry out any other attack on this list that involves a compromised voter application.",
+            rationale="If a sufficiently capable counterfeit application exists, and a voter is deceived into voting with it, it can effectively carry out any other attack on this list that involves a compromised voter application, though all mitigations against those attacks also serve as mitigations against this one. There are also several ways to mitigate this attack by reducing both the likelihood of such a counterfeit application existing and and the likelihood of such an application successfully deceiving voters. These include the use of trusted mobile application stores, high-profile announcements to voters to only trust applications from specific sources, and other techniques commonly used to validate software distributions.",
         ),
     ],
 )
@@ -1731,7 +1731,7 @@ keygen_sabotage = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=OUT_OF_SCOPE,
-            rationale="The selection of trustees is assumed to be done in a way such that the likelihood of them choosing not to participate is minimal.",
+            rationale="The selection of trustees is assumed to be done in a way such that the likelihood of them choosing not to participate is mimimal. In the event that not enough trustees are able to participate in key generation, new trustees must be chosen.",
         ),
     ],
 )
@@ -1747,7 +1747,7 @@ election_sabotage = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=OUT_OF_SCOPE,
-            rationale="The election authority has the ability to disrupt the election in myriad ways. The system cannot mitigate against these.",
+            rationale="The election authority has the ability to disrupt the election in myriad ways, ranging from simply never initiating the counting process to intentionally disabling/destroying some or all of the subsystems. The system cannot mitigate against these.",
         ),
     ],
 )

@@ -131,7 +131,7 @@ malicious_hardware = AttackPattern(
 compromised_user_device = AttackPattern(
     id="compromised_user_device",
     name="Compromised user device",
-    description="An adversary gains control of a user device that runs the VA or BCA. Unlike in attack Compromised device, this device is outside the control of the administrators of the voting system.",
+    description="An adversary gains control of a user device that runs the {VA} or {BCA}. Unlike in attack {Compromised device}, this device is outside the control of the administrators of the voting system.",
 )
 
 

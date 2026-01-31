@@ -136,7 +136,7 @@ trust_distribution = Mitigation(
 ballot_uniqueness_audit = Mitigation(
     id="M18",
     name="Ballot uniqueness audit",
-    description="From Küsters et al.: In addition to checking whether the audited ballot is in fact computed with the voter's choice, a voter also ensures that all ballots constructed by the browser are different.",
+    description="'From Küsters et al.~{[[KustersEtAlClashAttacks2012]]}: In addition to checking whether the audited ballot is in fact computed with the voter''s choice and the random coins provided by the browser for that ballot, a voter also ensures that all ballots (including the submitted ballot) constructed by the browser are different. For this purpose, a voter would typically record the ballots in some way, e.g., by having them emailed to her, and then compare these ballots.'",
     scope=Scope.PARTIALLY_CORE,
 )
 
@@ -150,7 +150,7 @@ tamper_evident_bulletin_board = Mitigation(
 controlled_environment = Mitigation(
     id="M20",
     name="Controlled environment",
-    description="The physical location housing the AGN as well as the hardware on which the TA and TAS run is a controlled environment with restricted access.",
+    description="The physical location housing the {AGN} as well as the hardware on which the {TA} and {TAS} run is a controlled environment with restricted access.",
     scope=Scope.NON_CORE,
 )
 
@@ -173,14 +173,14 @@ proof_of_plaintext_knowledge = Mitigation(
 ballot_weeding = Mitigation(
     id="M23",
     name="Ballot weeding",
-    description="Duplicates are removed from the set of ballots submitted to the mixnet.",
+    description="Duplicates are removed from the set of ballots submitted to the mixnet; see Bernhard et al.~{[[BernhardEtAlAdaptingHelios2011]]} Typically a duplicate ballot is defined as a ballot that is identical to one cast previously. It is important to carefully consider when the duplicate weeding takes place, either at cast time or during mixnet submission. For example, detection at cast time can lead to performance problems, whereas postponing this to mixnet submission time can lead to disputes.",
     scope=Scope.PARTIALLY_CORE,
 )
 
 voter_pseudonyms = Mitigation(
     id="M24",
     name="Voter pseudonyms",
-    description="Data published to achieve Eligibility verifiability only reveals pseudonyms. Even if ballot encryption is compromised, its content cannot be linked to real identities using public information.",
+    description="Data published to achieve {M4} (Eligibility verifiability) only reveals pseudonyms. Even if ballot encryption is compromised, its content cannot be linked to real identities using public information.",
     scope=Scope.CORE,
 )
 
@@ -229,7 +229,7 @@ auditable_pseudonyms = Mitigation(
 voter_specific_naor_yung_proofs = Mitigation(
     id="M31",
     name="Voter specific Naor-Yung proofs",
-    description="Ballot cryptogram Naor-Yung proofs are made voter-specific, for example by including the voter's pseudonym or signature public key in the proof challenge generation.",
+    description="Ballot cryptogram Naor-Yung proofs are made voter-specific, for example by including the voter's pseudonym or signature public key (or other voter derived value) in the proof challenge generation.",
     scope=Scope.CORE,
 )
 
