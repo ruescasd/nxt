@@ -105,9 +105,9 @@ def _render_attack_tree(
         lines.append(f"{name}")
         child_prefix = ""
     else:
-        connector = "└─" if is_last else "├─"
+        connector = "└── " if is_last else "├── "
         lines.append(f"{prefix}{connector}{name}{ctx_str}")
-        child_prefix = prefix + ("  " if is_last else "│ ")
+        child_prefix = prefix + ("    " if is_last else "│   ")
     
     # Get children (attacks that achieve this one)
     children = sorted(
@@ -168,6 +168,115 @@ def outstanding_attacks(model: ThreatModel, root: Optional[Attack] = None) -> li
             outstanding.append(attack)
     
     return outstanding
+
+
+def outstanding_table(
+    model: ThreatModel, 
+    root: Optional[Attack] = None,
+    include_oos_only: bool = False
+) -> str:
+    """
+    Display outstanding attacks in table format.
+    
+    Shows attack lineages (paths from root to leaf) for attacks without mitigations.
+    Format: RootAttack > ChildAttack (Context) > *Outstanding*
+    
+    Args:
+        model: The threat model to query
+        root: Optional root attack to filter by
+        include_oos_only: If True, also includes attacks where ALL mitigations are
+            "Out of scope" (effectively unmitigated from a practical standpoint)
+    """
+    OUTSTANDING = "*Outstanding*"
+    
+    # Collect outstanding lines
+    lines = []
+    
+    if root is None:
+        # Get all root attacks (no parents)
+        roots = [a for a in model.attacks if not a.achieves]
+    else:
+        roots = [root]
+    
+    for root_attack in roots:
+        _collect_outstanding_lines(model, root_attack, [], lines, OUTSTANDING, include_oos_only)
+    
+    # Format as table
+    return _format_outstanding_table(lines)
+
+
+def _collect_outstanding_lines(
+    model: ThreatModel,
+    attack: Attack,
+    lineage: list[str],
+    result: list[str],
+    outstanding_marker: str = "*Outstanding*",
+    include_oos_only: bool = False
+) -> None:
+    """Recursively collect outstanding attack lineages.
+    
+    Args:
+        include_oos_only: If True, also includes attacks where ALL mitigations
+            are "Out of scope" (treating them as effectively outstanding)
+    """
+    
+    # Build name with context
+    if attack.occurs_in:
+        name = f"{attack.name} ({', '.join(c.id for c in attack.occurs_in)})"
+    else:
+        name = attack.name
+    
+    current_lineage = lineage + [name]
+    
+    # Get children
+    children = [a for a in model.attacks if attack in a.achieves]
+    
+    # Check if this is an outstanding leaf
+    # Outstanding = no children, no mitigations (including OOS!), AND no variant_of
+    # Note: OOS still counts as a mitigation for the purpose of "outstanding" check
+    has_mitigations = len(attack.mitigations) > 0
+    
+    # Check if attack has ONLY "Out of scope" mitigations
+    oos_only = False
+    if include_oos_only and has_mitigations:
+        oos_only = all(ma.mitigation.name == "Out of scope" for ma in attack.mitigations)
+    
+    is_outstanding = not children and not has_mitigations and not attack.variant_of
+    is_oos_only_leaf = not children and oos_only and not attack.variant_of
+    
+    if is_outstanding or is_oos_only_leaf:
+        # This is an outstanding attack (or effectively outstanding if OOS-only)
+        result.append(" > ".join(current_lineage + [outstanding_marker]))
+        return
+    
+    # Recurse into children
+    for child in children:
+        _collect_outstanding_lines(model, child, current_lineage, result, outstanding_marker, include_oos_only)
+
+
+def _format_outstanding_table(lines: list[str]) -> str:
+    """Format outstanding lines as a table."""
+    # Find max width
+    if lines:
+        max_width = max(len(line) for line in lines)
+        width = max(22, max_width)  # Minimum width for header
+    else:
+        width = 20  # "Attack outstanding" is 18 chars
+    
+    output = []
+    sep = f"+{'-' * (width + 2)}+"
+    header_sep = f"+{'=' * (width + 2)}+"
+    
+    output.append(sep)
+    output.append(f"| {'Attack outstanding'.ljust(width)} |")
+    output.append(header_sep)
+    
+    for line in sorted(lines):
+        output.append(f"| {line.ljust(width)} |")
+    
+    output.append(sep)
+    
+    return "\n".join(output)
 
 
 def _collect_descendants(model: ThreatModel, attack: Attack, result: list[Attack]) -> None:
@@ -373,3 +482,307 @@ def _format_property_table(rows: list[tuple[str, str, list[str], list[str]]]) ->
         lines.append(sep)
     
     return "\n".join(lines)
+
+
+def attack_table(model: ThreatModel, root: Optional[Attack] = None) -> str:
+    """
+    Display attack table in legacy format.
+    
+    Format matches legacy view.py -e attack output with columns:
+    Attack, Description, Context, Properties
+    
+    The table shows tree structure in Attack column using └─ and ├─ prefixes.
+    """
+    # Get attacks in tree order
+    if root is None:
+        roots = [a for a in model.attacks if not a.achieves]
+    else:
+        roots = [root]
+    
+    rows: list[tuple[str, str, str, str]] = []
+    
+    for r in sorted(roots, key=lambda a: a.name):
+        _collect_attack_rows(model, r, rows, level=0, prefix="")
+    
+    return _format_attack_table(rows)
+
+
+def _collect_attack_rows(
+    model: ThreatModel,
+    attack: Attack,
+    rows: list[tuple[str, str, str, str]],
+    level: int,
+    prefix: str
+) -> None:
+    """Recursively collect attack rows with tree indentation."""
+    # Build name with tree prefix
+    if level == 0:
+        name = attack.name
+        child_prefix = ""
+    else:
+        name = prefix + attack.name
+        child_prefix = prefix[:-1] + "─"  # Continue tree structure
+    
+    # Truncate description to 50 chars
+    desc = attack.description or ""
+    desc = desc[:50] + ".." if len(desc) > 50 else desc
+    
+    # Context
+    if attack.occurs_in:
+        context = ", ".join(c.id for c in attack.occurs_in)
+    else:
+        context = "None"
+    
+    # Properties
+    props = ", ".join(p.id for p in attack.targets)
+    
+    rows.append((name, desc, context, props))
+    
+    # Get children (attacks that achieve this one)
+    children = sorted(
+        [a for a in model.attacks if attack in a.achieves],
+        key=lambda a: a.name
+    )
+    
+    for i, child in enumerate(children):
+        is_last = (i == len(children) - 1)
+        if level == 0:
+            new_prefix = "└─" if is_last else "├─"
+        else:
+            new_prefix = child_prefix
+        _collect_attack_rows(model, child, rows, level + 1, new_prefix)
+
+
+def _format_attack_table(rows: list[tuple[str, str, str, str]]) -> str:
+    """Format attack rows as a table matching legacy output."""
+    # Column widths matching legacy output
+    attack_width = 51
+    desc_width = 52
+    ctx_width = 9
+    props_width = 16
+    
+    lines = []
+    
+    # Header
+    sep = f"+{'-' * (attack_width + 2)}+{'-' * (desc_width + 2)}+{'-' * (ctx_width + 2)}+{'-' * (props_width + 2)}+"
+    header_sep = f"+{'=' * (attack_width + 2)}+{'=' * (desc_width + 2)}+{'=' * (ctx_width + 2)}+{'=' * (props_width + 2)}+"
+    
+    lines.append(sep)
+    lines.append(f"| {'Attack'.ljust(attack_width)} | {'Description'.ljust(desc_width)} | {'Context'.ljust(ctx_width)} | {'Properties'.ljust(props_width)} |")
+    lines.append(header_sep)
+    
+    for name, desc, context, props in rows:
+        name_cell = name[:attack_width].ljust(attack_width)
+        desc_cell = desc[:desc_width].ljust(desc_width)
+        ctx_cell = context[:ctx_width].ljust(ctx_width)
+        props_cell = props[:props_width].ljust(props_width)
+        
+        lines.append(f"| {name_cell} | {desc_cell} | {ctx_cell} | {props_cell} |")
+        lines.append(sep)
+    
+    return "\n".join(lines)
+
+
+# =============================================================================
+# Mitigation views
+# =============================================================================
+
+def mitigation_table(model: ThreatModel, root: Optional[Attack] = None) -> str:
+    """
+    Display mitigation table in legacy format.
+    
+    Format matches legacy view.py -e mitigation output with columns:
+    Mitigation, Description, Attack line
+    
+    Attack line shows the path from root attack to the mitigation:
+    RootAttack > ChildAttack (Context) > MitigationName
+    """
+    # Get attack mitigation lines: list of (mitigation_name, lineage_string)
+    lines_by_mitigation: dict[str, list[str]] = {}
+    mit_descriptions: dict[str, str] = {}
+    
+    # Get root attacks
+    if root is None:
+        roots = [a for a in model.attacks if not a.achieves]
+    else:
+        roots = [root]
+    
+    for root_attack in roots:
+        _collect_mitigation_lines(model, root_attack, [], lines_by_mitigation, mit_descriptions)
+    
+    return _format_mitigation_table(lines_by_mitigation, mit_descriptions)
+
+
+def _get_attack_display_name(attack: Attack) -> str:
+    """Get attack name with context for display in lineage."""
+    if attack.occurs_in:
+        return f"{attack.name} ({', '.join(c.id for c in attack.occurs_in)})"
+    return attack.name
+
+
+def _collect_mitigation_lines(
+    model: ThreatModel,
+    attack: Attack,
+    lineage: list[str],
+    lines_by_mitigation: dict[str, list[str]],
+    mit_descriptions: dict[str, str]
+) -> None:
+    """
+    Recursively collect mitigation lines from attack tree.
+    
+    Builds attack lineages (paths from root to leaf) and records each
+    mitigation found along with its attack path.
+    """
+    # Build current lineage
+    current_name = _get_attack_display_name(attack)
+    current_lineage = lineage + [current_name]
+    
+    # Record direct mitigations on this attack
+    for ma in attack.mitigations:
+        if ma.mitigation.id == "OOS":
+            continue  # Skip Out of scope
+        
+        mit_name = ma.mitigation.name
+        # Attack line format: root > child > mitigation
+        attack_line = " > ".join(current_lineage + [mit_name])
+        
+        if mit_name not in lines_by_mitigation:
+            lines_by_mitigation[mit_name] = []
+            mit_descriptions[mit_name] = ma.mitigation.description or ""
+        
+        lines_by_mitigation[mit_name].append(attack_line)
+    
+    # Note: In legacy, pattern (abstract) mitigations were NOT included
+    # in the mitigation table unless abstract=True was passed. We match
+    # that behavior by NOT following variant_of for pattern mitigations.
+    
+    # Recurse into children (attacks that achieve this one)
+    children = [a for a in model.attacks if attack in a.achieves]
+    for child in children:
+        _collect_mitigation_lines(model, child, current_lineage, lines_by_mitigation, mit_descriptions)
+
+
+def _format_mitigation_table(
+    lines_by_mitigation: dict[str, list[str]], 
+    mit_descriptions: dict[str, str]
+) -> str:
+    """Format mitigation data as a table matching legacy output."""
+    # Column widths matching legacy output
+    mit_width = 33
+    desc_width = 52
+    line_width = 90
+    
+    lines = []
+    
+    # Header
+    sep = f"+{'-' * (mit_width + 2)}+{'-' * (desc_width + 2)}+{'-' * (line_width + 2)}+"
+    header_sep = f"+{'=' * (mit_width + 2)}+{'=' * (desc_width + 2)}+{'=' * (line_width + 2)}+"
+    
+    lines.append(sep)
+    lines.append(f"| {'Mitigation'.ljust(mit_width)} | {'Description'.ljust(desc_width)} | {'Attack line'.ljust(line_width)} |")
+    lines.append(header_sep)
+    
+    # Sort mitigations alphabetically
+    for mit_name in sorted(lines_by_mitigation.keys()):
+        attack_lines = sorted(lines_by_mitigation[mit_name])
+        desc = mit_descriptions.get(mit_name, "")
+        desc = desc[:50] + ".." if len(desc) > 50 else desc
+        
+        max_rows = max(1, len(attack_lines))
+        
+        for i in range(max_rows):
+            if i == 0:
+                mit_cell = mit_name[:mit_width].ljust(mit_width)
+                desc_cell = desc[:desc_width].ljust(desc_width)
+            else:
+                mit_cell = " " * mit_width
+                desc_cell = " " * desc_width
+            
+            if i < len(attack_lines):
+                line_cell = attack_lines[i][:line_width].ljust(line_width)
+            else:
+                line_cell = " " * line_width
+            
+            lines.append(f"| {mit_cell} | {desc_cell} | {line_cell} |")
+        
+        lines.append(sep)
+    
+    return "\n".join(lines)
+
+
+def mitigation_tree(model: ThreatModel, root: Attack) -> str:
+    """
+    Display mitigation tree in legacy format.
+    
+    Shows attack tree with mitigations as leaves.
+    Format:
+        RootAttack
+        ├── ChildAttack (Context)
+        │   ├── Mitigation1
+        │   └── Mitigation2
+        └── ChildAttack2 (Context)
+            └── Mitigation3
+    """
+    lines = []
+    
+    # Root attack name
+    lines.append(root.name)
+    
+    # Get children of the root attack
+    children = [a for a in model.attacks if root in a.achieves]
+    children = sorted(children, key=lambda a: (a.name, ','.join(c.id for c in a.occurs_in) if a.occurs_in else ''))
+    
+    for i, child in enumerate(children):
+        is_last = (i == len(children) - 1)
+        _build_mitigation_tree_node(model, child, lines, "", is_last)
+    
+    return "\n".join(lines)
+
+
+def _build_mitigation_tree_node(
+    model: ThreatModel,
+    attack: Attack,
+    lines: list[str],
+    prefix: str,
+    is_last: bool
+) -> None:
+    """Build a node in the mitigation tree."""
+    # Connector characters
+    branch = "└── " if is_last else "├── "
+    child_prefix = prefix + ("    " if is_last else "│   ")
+    
+    # Attack name with context
+    if attack.occurs_in:
+        name = f"{attack.name} ({', '.join(c.id for c in attack.occurs_in)})"
+    else:
+        name = attack.name
+    
+    lines.append(f"{prefix}{branch}{name}")
+    
+    # Collect mitigations for this attack
+    mitigations = []
+    for ma in attack.mitigations:
+        if ma.mitigation.id != "OOS":
+            mitigations.append(ma.mitigation.name)
+    mitigations = sorted(mitigations)
+    
+    # Get children of this attack
+    children = [a for a in model.attacks if attack in a.achieves]
+    children = sorted(children, key=lambda a: (a.name, ','.join(c.id for c in a.occurs_in) if a.occurs_in else ''))
+    
+    # Total items (mitigations + children)
+    total_items = len(mitigations) + len(children)
+    item_idx = 0
+    
+    # Show mitigations as leaves
+    for mit_name in mitigations:
+        item_idx += 1
+        is_last_item = (item_idx == total_items)
+        mit_branch = "└── " if is_last_item else "├── "
+        lines.append(f"{child_prefix}{mit_branch}{mit_name}")
+    
+    # Recurse into children
+    for child in children:
+        item_idx += 1
+        is_last_item = (item_idx == total_items)
+        _build_mitigation_tree_node(model, child, lines, child_prefix, is_last_item)

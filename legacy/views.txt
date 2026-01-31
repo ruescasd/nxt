@@ -3,9 +3,6 @@ the help screen for the command, and then the results for each of the commands s
 Not all examples are represented at the moment, some commands that specify a root node (-r) are not
 yet included, these are:
 
-./view.py -e attack -r my_attack            # prints attacks table, starting at my_attack
-./view.py -e mitigation -r my_attack        # prints mitigations table for attack 'my_attack'
-./view.py -e mitigation -r my_attack -t     # prints mitigations tree for attack 'my_attack'
 ./view.py -e outstanding -r my_attack       # prints outstanding attacks starting at 'my_attack'
 
 ❯ python view.py
@@ -819,6 +816,48 @@ Wrong public key
 | └─Corruption                                        | The election administrator replaces the election p.. | EA        | P1.2             |
 +-----------------------------------------------------+------------------------------------------------------+-----------+------------------+
 
+❯ python .\view.py -e attack -r "Internal sabotage"
++--------------------------------------------+------------------------------------------------------+-----------+----------------+
+| Attack                                     | Description                                          | Context   | Properties     |
++============================================+======================================================+===========+================+
+| Internal sabotage                          |                                                      | None      |                |
++--------------------------------------------+------------------------------------------------------+-----------+----------------+
+| ├─Subsystem sabotage                       | One or more subsystems fail to operate in a timely.. | SUB       | A1, A2, A3, A4 |
++--------------------------------------------+------------------------------------------------------+-----------+----------------+
+| ├─Network sabotage                         | One or more networks fail to operate in a timely f.. | AGN       | A1, A2, A3, A4 |
++--------------------------------------------+------------------------------------------------------+-----------+----------------+
+| ├─Network sabotage                         | One or more networks fail to operate in a timely f.. | EAN       | A1, A2, A3, A4 |
++--------------------------------------------+------------------------------------------------------+-----------+----------------+
+| ├─Network sabotage                         | One or more networks fail to operate in a timely f.. | EON       | A1, A2, A3, A4 |
++--------------------------------------------+------------------------------------------------------+-----------+----------------+
+| ├─Tally sabotage---Overwhelming corruption | A number of trustees sufficient to prevent decrypt.. | None      | A3             |
++--------------------------------------------+------------------------------------------------------+-----------+----------------+
+| ├─Keygen sabotage---Corruption             | One or more trustees choose not to participate, or.. | TR        | A4             |
++--------------------------------------------+------------------------------------------------------+-----------+----------------+
+| └─Election sabotage---Corruption           | The election authority disrupts the election.        | EA        | A1, A2, A3, A4 |
++--------------------------------------------+------------------------------------------------------+-----------+----------------+
+
+❯ python .\view.py -e attack -r "Malicious bulletin board"
++-----------------------------------------------------+------------------------------------------------------+-----------+--------------+
+| Attack                                              | Description                                          | Context   | Properties   |
++=====================================================+======================================================+===========+==============+
+| Malicious bulletin board                            |                                                      | None      |              |
++-----------------------------------------------------+------------------------------------------------------+-----------+--------------+
+| ├─Cheating BB---cryptogram check                    | The bulletin board does not provide correct inform.. | BB        | V2           |
++-----------------------------------------------------+------------------------------------------------------+-----------+--------------+
+| ├─Cheating BB---election audit                      | The bulletin board does not provide correct electi.. | BB        | V2, V3       |
++-----------------------------------------------------+------------------------------------------------------+-----------+--------------+
+| ├─Cheating EA---cryptogram check                    | The election administrator manipulates the bulleti.. | EA        | V2           |
++-----------------------------------------------------+------------------------------------------------------+-----------+--------------+
+| ├─Cheating EA---election audit                      | The election administrator manipulates the bulleti.. | EA        | V2, V3       |
++-----------------------------------------------------+------------------------------------------------------+-----------+--------------+
+| ├─Clash attack                                      | The voting application encrypts identical votes wi.. | EA        | V2           |
++-----------------------------------------------------+------------------------------------------------------+-----------+--------------+
+| ├─Time of Check to Time of Use---Compromised device | The bulletin board removes cryptograms between use.. | BB        | V2, V3       |
++-----------------------------------------------------+------------------------------------------------------+-----------+--------------+
+| └─Time of Check to Time of Use---Corruption         | The election administrator manipulates the bulleti.. | EA        | V2, V3       |
++-----------------------------------------------------+------------------------------------------------------+-----------+--------------+
+
 ❯ python view.py -e mitigation
 +-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
 | Mitigation                        | Description                                          | Attack line                                                                                |
@@ -916,6 +955,73 @@ Wrong public key
 | Voter specific Naor-Yung proofs   | Ballot cryptogram Naor-Yung proofs are made voter-.. | Broken ballot independence > Ballot copying > Voter specific Naor-Yung proofs              |
 +-----------------------------------+------------------------------------------------------+--------------------------------------------------------------------------------------------+
 
+❯ python .\view.py -e mitigation -r "Bad decryption"
++-----------------------------------+---------------------------------------------------+-------------------------------------------------------------------------------+
+| Mitigation                        | Description                                       | Attack line                                                                   |
++===================================+===================================================+===============================================================================+
+| Counted as recorded verifiability | A voter can verify that their ballot was counted. | Bad decryption > Compromised device (EST) > Counted as recorded verifiability |
+|                                   |                                                   | Bad decryption > Compromised device (TA) > Counted as recorded verifiability  |
+|                                   |                                                   | Bad decryption > Compromised device (TAS) > Counted as recorded verifiability |
+|                                   |                                                   | Bad decryption > Compromised device (TST) > Counted as recorded verifiability |
+|                                   |                                                   | Bad decryption > Corruption (EA) > Counted as recorded verifiability          |
+|                                   |                                                   | Bad decryption > Corruption (TR) > Counted as recorded verifiability          |
+|                                   |                                                   | Bad decryption > Network tampering (AGN) > Counted as recorded verifiability  |
++-----------------------------------+---------------------------------------------------+-------------------------------------------------------------------------------+
+| Message signatures                | Messages on the network are digitally signed.     | Bad decryption > Compromised device (EST) > Message signatures                |
+|                                   |                                                   | Bad decryption > Compromised device (TAS) > Message signatures                |
+|                                   |                                                   | Bad decryption > Corruption (EA) > Message signatures                         |
++-----------------------------------+---------------------------------------------------+-------------------------------------------------------------------------------+
+
+❯ python .\view.py -e mitigation -r "Ballot tampering"
++--------------------------------+------------------------------------------------------+------------------------------------------------------------------------------+
+| Mitigation                     | Description                                          | Attack line                                                                  |
++================================+======================================================+==============================================================================+
+| Recorded as cast verifiability | A voter can verify that their recorded ballot is i.. | Ballot tampering > Compromised device (BB) > Recorded as cast verifiability  |
+|                                |                                                      | Ballot tampering > Compromised device (EAA) > Recorded as cast verifiability |
+|                                |                                                      | Ballot tampering > Compromised device (EAS) > Recorded as cast verifiability |
+|                                |                                                      | Ballot tampering > Compromised device (EST) > Recorded as cast verifiability |
+|                                |                                                      | Ballot tampering > Corruption (EA) > Recorded as cast verifiability          |
+|                                |                                                      | Ballot tampering > Network tampering (EAN) > Recorded as cast verifiability  |
+|                                |                                                      | Ballot tampering > Network tampering (IN) > Recorded as cast verifiability   |
++--------------------------------+------------------------------------------------------+------------------------------------------------------------------------------+
+
+❯ python .\view.py -e mitigation -r "Bad decryption" -t
+Bad decryption
+├── Compromised device (EST)
+│   ├── Counted as recorded verifiability
+│   └── Message signatures
+├── Compromised device (TA)
+│   └── Counted as recorded verifiability
+├── Compromised device (TAS)
+│   ├── Counted as recorded verifiability
+│   └── Message signatures
+├── Compromised device (TST)
+│   └── Counted as recorded verifiability
+├── Corruption (EA)
+│   ├── Counted as recorded verifiability
+│   └── Message signatures
+├── Corruption (TR)
+│   └── Counted as recorded verifiability
+└── Network tampering (AGN)
+    └── Counted as recorded verifiability
+
+❯ python .\view.py -e mitigation -r "Ballot tampering" -t
+Ballot tampering
+├── Compromised device (BB)
+│   └── Recorded as cast verifiability
+├── Compromised device (EAA)
+│   └── Recorded as cast verifiability
+├── Compromised device (EAS)
+│   └── Recorded as cast verifiability
+├── Compromised device (EST)
+│   └── Recorded as cast verifiability
+├── Corruption (EA)
+│   └── Recorded as cast verifiability
+├── Network tampering (EAN)
+│   └── Recorded as cast verifiability
+└── Network tampering (IN)
+    └── Recorded as cast verifiability
+
 ❯ python view.py -e context
 +------------------------------------+-----------+---------------+
 | Name                               | Kind      | Description   |
@@ -984,3 +1090,28 @@ Wrong public key
 | Attack outstanding   |
 +======================+
 +----------------------+
+
+The following two views were produced by temporarily removing (and then parsing tm.yaml) the out of scope 
+mitigation from "Malicious reporting of VD":
+    
+    mitigations:
+      -
+        - Out of scope
+        - Since the system does not satisfy D*-dispute-freeness, it may not be possible
+          to avoid this attack except by removing election invalidation altogether.
+          However, this undermines mitigation {M1} (Cast as intended verifiability) and
+          {M2} (Recorded as cast verifiability) against {Mismatched encryption}.
+
+❯ python .\view.py -e outstanding
++-----------------------------------------------------------------+
+| Attack outstanding                                              |
++=================================================================+
+| Malicious reporting > Malicious reporting of VD > *Outstanding* |
++-----------------------------------------------------------------+
+
+❯ python .\view.py -e outstanding -r "Malicious reporting"
++-----------------------------------------------------------------+
+| Attack outstanding                                              |
++=================================================================+
+| Malicious reporting > Malicious reporting of VD > *Outstanding* |
++-----------------------------------------------------------------+
