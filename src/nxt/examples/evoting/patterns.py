@@ -309,11 +309,11 @@ spoofing = AttackPattern(
     mitigations=[
         MitigationApplication(
             mitigation=mit.controlled_environment,
-            rationale="For some parts of the system, a controlled environment can prevent adversaries from masquerading as protocol actors (e.g., the identities of trustees can be physically verified when they enter the room housing the AGN). However, much of the system is run in uncontrolled environments.",
+            rationale="For some parts of the system, a controlled environment can prevent adversaries from masquerading as protocol actors (e.g., the identities of trustees can be physically verified when they enter the room housing the {AGN}). However, much of the system is run in uncontrolled environments.",
         ),
         MitigationApplication(
             mitigation=mit.message_signatures,
-            rationale="Provided an adversary does not acquire the necessary signing keys (e.g., through Phishing or Side channel), the use of digitally signed messages within the protocol can prevent spoofed messages from impacting system security.",
+            rationale="Provided an adversary does not acquire the necessary signing keys (e.g., through {Phishing} or {Side channel}), the use of digitally signed messages within the protocol can prevent spoofed messages from impacting system security.",
         ),
     ],
 )

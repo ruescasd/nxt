@@ -32,7 +32,7 @@ cheating_voting_device = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.cast_as_intended,
-            rationale="The ballot checking process will detect mismatched encrypted submissions.",
+            rationale="The ballot checking process will detect mismatched encrypted submissions. For a single compromised device, this checking process (assuming it is carried out by the voter using a different, uncompromised device) detects this attack, though only if the voter carries it out. In this case, the voter may resubmit their ballot using an uncompromised device, thwarting the attack for that voter. For large scale attacks that compromise multiple devices, the ballot checking process detects this attack with high probability if enough voters carry it out using uncompromised devices. If a procedure is in place whereby an election outcome is invalidated if a sufficient number of voters make reports of mismatched ciphertexts, the attack is additionally on {A3}. See also Malicious reporting.",
         ),
         MitigationApplication(
             mitigation=mit.recorded_as_cast,
@@ -61,7 +61,7 @@ ballot_tampering_network_in = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.recorded_as_cast,
-            rationale="For a single altered or removed cryptogram, the ballot tracker checking process detects this attack, though only if the voter carries it out.",
+            rationale="For a single altered or removed cryptogram, the ballot tracker checking process detects this attack, though only if the voter carries it out. For large scale attacks that compromise multiple cryptograms, the ballot tracker checking process detects this attack with high probability if enough voters carry it out.",
         ),
     ],
 )
@@ -77,7 +77,7 @@ ballot_tampering_network_ean = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.recorded_as_cast,
-            rationale="For a single altered or removed cryptogram, the ballot tracker checking process detects this attack, though only if the voter carries it out.",
+            rationale="For a single altered or removed cryptogram, the ballot tracker checking process detects this attack, though only if the voter carries it out. For large scale attacks that compromise multiple cryptograms, the ballot tracker checking process detects this attack with high probability if enough voters carry it out.",
         ),
     ],
 )
@@ -93,7 +93,7 @@ ballot_tampering_device_eas = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.recorded_as_cast,
-            rationale="For a single altered or removed cryptogram, the ballot tracker checking process detects this attack, though only if the voter carries it out.",
+            rationale="For a single altered or removed cryptogram, the ballot tracker checking process detects this attack, though only if the voter carries it out. For large scale attacks that compromise multiple cryptograms, the ballot tracker checking process detects this attack with high probability if enough voters carry it out.",
         ),
     ],
 )
@@ -109,7 +109,7 @@ ballot_tampering_device_bb = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.recorded_as_cast,
-            rationale="For a single altered or removed cryptogram, the ballot tracker checking process detects this attack, though only if the voter carries it out.",
+            rationale="For a single altered or removed cryptogram, the ballot tracker checking process detects this attack, though only if the voter carries it out. For large scale attacks that compromise multiple cryptograms, the ballot tracker checking process detects this attack with high probability if enough voters carry it out.",
         ),
     ],
 )
@@ -125,7 +125,7 @@ ballot_tampering_device_eaa = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.recorded_as_cast,
-            rationale="For a single altered or removed cryptogram, the ballot tracker checking process detects this attack, though only if the voter carries it out.",
+            rationale="For a single altered or removed cryptogram, the ballot tracker checking process detects this attack, though only if the voter carries it out. For large scale attacks that compromise multiple cryptograms, the ballot tracker checking process detects this attack with high probability if enough voters carry it out.",
         ),
     ],
 )
@@ -141,7 +141,7 @@ ballot_tampering_device_est = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.recorded_as_cast,
-            rationale="For a single altered or removed cryptogram, the ballot tracker checking process detects this attack, though only if the voter carries it out.",
+            rationale="For a single altered or removed cryptogram, the ballot tracker checking process detects this attack, though only if the voter carries it out. For large scale attacks that compromise multiple cryptograms, the ballot tracker checking process detects this attack with high probability if enough voters carry it out.",
         ),
     ],
 )
@@ -157,7 +157,7 @@ ballot_tampering_corruption_ea = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.recorded_as_cast,
-            rationale="For a single altered or removed cryptogram, the ballot tracker checking process detects this attack, though only if the voter carries it out.",
+            rationale="For a single altered or removed cryptogram, the ballot tracker checking process detects this attack, though only if the voter carries it out. For large scale attacks that compromise multiple cryptograms, the ballot tracker checking process detects this attack with high probability if enough voters carry it out.",
         ),
     ],
 )
@@ -709,7 +709,7 @@ cheating_ballot_checking_application = Attack(
 cheating_auditing_application = Attack(
     id="cheating_auditing_application",
     name="Cheating auditing application",
-    description="The checking application does not perform election verification operations correctly.",
+    description="The checking application does not perform election verification operations correctly. See also {[further-remarks-checking-application][further remarks on the checking application]}.",
     variant_of=pat.compromised_user_device,
     achieves=[malicious_verification_application],
     occurs_in=[ctx.VER],
@@ -717,7 +717,7 @@ cheating_auditing_application = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=OUT_OF_SCOPE,
-            rationale="If the device used to perform ballot tracking code checks is compromised, recorded-as-cast and counted-as-recorded verifiability are broken for the user of that device.",
+            rationale="If the device used to perform ballot tracking code checks is compromised, recorded-as-cast and counted-as-recorded verifiability are broken for the user of that device. However, election audits ({V3}) can be carried out by anyone and are general verifications that do not depend on specific ballot tracking codes. Note that the compromise of arbitrary devices used to perform election verification by arbitrary users is also out of scope.",
         ),
     ],
 )
@@ -774,7 +774,7 @@ cheating_ea_election_audit = Attack(
 clash_attack = Attack(
     id="clash_attack",
     name="Clash attack",
-    description="The voting application encrypts identical votes with identical randomness. The election administrator manipulates the bulletin board such that many voters will perform checks against the same cryptogram.",
+    description="The voting application encrypts identical votes with identical randomness. The election administrator manipulates the bulletin board such that many voters will perform checks against the same cryptogram.~{[[KustersEtAlClashAttacks2012]]}",
     variant_of=pat.corruption,
     achieves=[malicious_bulletin_board],
     occurs_in=[ctx.EA],
@@ -988,13 +988,13 @@ malicious_reporting = Attack(
 malicious_reporting_vd = Attack(
     id="malicious_reporting_vd",
     name="Malicious reporting of VD",
-    description="A sufficient number of voters falsely claim that their voting device is producing invalid cryptograms, so the election is invalidated.",
+    description="A sufficient number of voters falsely claim that their voting device is producing invalid cryptograms, so the election is invalidated. This attack is possible if 1) the system does not satisfy {D3} and 2) a procedure is in place whereby an election outcome is invalidated if a sufficient number of voters make reports.",
     achieves=[malicious_reporting],
     targets=[prop.A1, prop.D3],
     mitigations=[
         MitigationApplication(
             mitigation=OUT_OF_SCOPE,
-            rationale="Since the system does not satisfy D*-dispute-freeness, it may not be possible to avoid this attack except by removing election invalidation altogether.",
+            rationale="Since the system does not satisfy D*-dispute-freeness, it may not be possible to avoid this attack except by removing election invalidation altogether. However, this undermines mitigation {M1} (Cast as intended verifiability) and {M2} (Recorded as cast verifiability) against {Mismatched encryption}.",
         ),
     ],
 )
@@ -1002,7 +1002,7 @@ malicious_reporting_vd = Attack(
 vote_receipt_replay = Attack(
     id="vote_receipt_replay",
     name="Vote receipt replay",
-    description="A voter presents a receipt for a previous election as a receipt for the current election, claiming that their cryptogram should be present in the bulletin board but is not.",
+    description="A voter presents a receipt for a previous election as a receipt for the current election, claiming that their cryptogram should be present in the bulletin board but is not",
     achieves=[malicious_reporting],
     targets=[prop.D1],
     mitigations=[
@@ -1036,7 +1036,7 @@ shoulder_surfing = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=OUT_OF_SCOPE,
-            rationale="Preventing this attack is outside the system scope. If a voter allows, or is coerced into allowing, an observer to watch their entire voting session, that observer will learn how they voted.",
+            rationale="Preventing this attack is outside the system scope. If a voter allows, or is coerced into allowing, an observer to watch their entire voting session, that observer will learn how they voted. This can be mitigated in the coercion case to some extent by allowing a voter to vote multiple times (across multiple sessions) and keep only the last one (or only a specific one, though this may not be possible without the use of out-of-band voting codes), in the hope that they can complete a non-coerced session before the voting period ends.",
         ),
     ],
 )
@@ -1527,7 +1527,7 @@ italian_attack = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=OUT_OF_SCOPE,
-            rationale="The system has no way to restrict the sets of choices that voters can make (other than any restrictions imposed by the rules of the election).",
+            rationale="The system has no way to restrict the sets of choices that voters can make (other than any restrictions imposed by the rules of the election). However, there is research on tally hiding voting systems such as Küsters et al.~{[[KustersEtAlOrdinosVerifiable2020]]}",
         ),
     ],
 )
@@ -1584,7 +1584,7 @@ targeted_dos_infrastructure = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.denial_of_service_protection,
-            rationale="This attack can be mitigated by standard denial of service mitigation techniques typically used for Internet services.",
+            rationale="This attack can be mitigated by standard denial of service mitigation techniques typically used for Internet services. These include the deployment of protective services such as Akamai and Cloudflare (especially for large/high stakes elections), proper configuration of firewall rules on election administration networks and cloud-based services, and per-client rate limiting of requests to prevent application-level denial of service (e.g., submission of many bad protocol messages by corrupted clients delaying the processing of legitimate protocol messages).",
         ),
     ],
 )
@@ -1598,7 +1598,7 @@ indiscriminate_dos = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=OUT_OF_SCOPE,
-            rationale="Preventing this attack is outside the system scope, as the system cannot control Internet infrastructure.",
+            rationale="Preventing this attack is outside the system scope, as the system cannot control Internet infrastructure. However, it can be mitigated by geographic diversity of servers for elections where such diversity can be achieved (e.g., parts of the infrastructure in the cloud can be replicated across multiple cloud regions so that regional disruptions don't take down the entire system).",
         ),
     ],
 )
@@ -1612,7 +1612,7 @@ targeted_dos_voters = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=OUT_OF_SCOPE,
-            rationale="Preventing this attack is outside the system scope, as the system cannot control the Internet access capabilities of the voters.",
+            rationale="Preventing this attack is outside the system scope, as the system cannot control the Internet access capabilities of the voters. One way to mitigate this attack is to provide voters with Internet access at locations like public libraries, election offices, coffee shops, etc., that would allow them to cast their ballots outside their ``home'' network (which is presumably what is being targeted in this scenario). Another is for the voting period to be long enough that such a targeted DoS does not prevent the voter from accessing the voting system at some convenient time during the voting period.",
         ),
     ],
 )
@@ -1653,7 +1653,7 @@ subsystem_sabotage = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=mit.operational_redundancy,
-            rationale="A subsystem employing redundancy allows it to continue operating even if an instance of it fails.",
+            rationale="A subsystem employing redundancy allows it to continue operating even if an instance of it fails. Note this mitigation is distinct from (and at a layer ``above'') mitigations aimed at preventing such an instance from being compromised to begin with.",
         ),
     ],
 )
@@ -1715,7 +1715,7 @@ tally_sabotage = Attack(
     mitigations=[
         MitigationApplication(
             mitigation=OUT_OF_SCOPE,
-            rationale="The use of multiple trustees in a threshold configuration is already a redundancy mechanism against tally disruption. If this mechanism fails there is no recourse.",
+            rationale="The use of multiple trustees in a threshold configuration is already a redundancy mechanism against tally disruption. If this mechanism fails there is no recourse. The number of trustees, the required threshold, and the trustees themselves should be chosen accordingly.",
         ),
     ],
 )

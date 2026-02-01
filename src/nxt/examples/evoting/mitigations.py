@@ -129,14 +129,14 @@ audited_platforms = Mitigation(
 trust_distribution = Mitigation(
     id="M17",
     name="Trust distribution",
-    description="The actor's role is distributed such that the cooperation of several parties is required to perform its operations.",
+    description="The actor's role is distributed such that the cooperation of several parties is required to perform its operations. An adversary must control or convince a sufficient number of parties to carry out the attack. The use of a threshold cryptographic system is an example of Trust distribution, but also of {M25} (Operational redundancy).",
     scope=Scope.PARTIALLY_CORE,
 )
 
 ballot_uniqueness_audit = Mitigation(
     id="M18",
     name="Ballot uniqueness audit",
-    description="'From Küsters et al.~{[[KustersEtAlClashAttacks2012]]}: In addition to checking whether the audited ballot is in fact computed with the voter''s choice and the random coins provided by the browser for that ballot, a voter also ensures that all ballots (including the submitted ballot) constructed by the browser are different. For this purpose, a voter would typically record the ballots in some way, e.g., by having them emailed to her, and then compare these ballots.'",
+    description="From Küsters et al.~{[[KustersEtAlClashAttacks2012]]}: In addition to checking whether the audited ballot is in fact computed with the voter's choice and the random coins provided by the browser for that ballot, a voter also ensures that all ballots (including the submitted ballot) constructed by the browser are different. For this purpose, a voter would typically record the ballots in some way, e.g., by having them emailed to her, and then compare these ballots.",
     scope=Scope.PARTIALLY_CORE,
 )
 
@@ -166,7 +166,7 @@ non_malleable_cryptosystem = Mitigation(
 proof_of_plaintext_knowledge = Mitigation(
     id="M22",
     name="Proof of plaintext knowledge",
-    description="Zero-knowledge proofs of plaintext knowledge attached to cast ballots are required when casting.",
+    description="Zero-knowledge proofs of plaintext knowledge attached to cast ballots are required when casting. Adversaries casting related ballots will not be able to produce such proofs. See Bernhard et al.~{[[BernhardEtAlHowNot2012a]]}",
     scope=Scope.CORE,
 )
 
@@ -180,14 +180,14 @@ ballot_weeding = Mitigation(
 voter_pseudonyms = Mitigation(
     id="M24",
     name="Voter pseudonyms",
-    description="Data published to achieve {M4} (Eligibility verifiability) only reveals pseudonyms. Even if ballot encryption is compromised, its content cannot be linked to real identities using public information.",
+    description="Data published to achieve {M4} (Eligibility verifiability) only reveals pseudonyms. Even if ballot encryption is compromised, its content cannot be linked to real identities using public information. See Haines et al.~{[[HainesEtAlSoKSecure2023]]} for other approaches to everlasting privacy.",
     scope=Scope.CORE,
 )
 
 operational_redundancy = Mitigation(
     id="M25",
     name="Operational redundancy",
-    description="The use of redundant subsystems or actors allows individual elements to fail without compromising the overall operation of the system.",
+    description="The use of redundant subsystems or actors allows individual elements to fail without compromising the overall operation of the system. The use of a threshold cryptographic system is an example of Operational redundancy, but also of {M17} (Trust distribution).",
     scope=Scope.PARTIALLY_CORE,
 )
 
@@ -222,7 +222,7 @@ append_only_trustee_board = Mitigation(
 auditable_pseudonyms = Mitigation(
     id="M30",
     name="Auditable pseudonyms",
-    description="Pseudonyms can be constructed from auditable, but private, information using a one way function.",
+    description="Pseudonyms can be constructed from auditable, but private, information using a one way function. This allows external auditors to privately verify that the identities certified by the EA are in fact eligible, without revealing those identities to the public (note that even if these identities were revealed, ballots are still protected by encryption).",
     scope=Scope.NON_CORE,
 )
 
