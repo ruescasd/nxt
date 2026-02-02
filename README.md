@@ -118,7 +118,7 @@ ancestors = nx.ancestors(G, "ballot_tampering.network")
 See `src/nxt/examples/evoting/` for a partial port of the E2E-VIV threat model.
 
 ```bash
-python -m nxt.examples.evoting
+python -m nxt.model
 ```
 
 ## Development

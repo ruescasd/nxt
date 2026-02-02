@@ -95,7 +95,7 @@ def get_legacy_data() -> tuple[dict, dict, dict, dict]:
         property_dict, context_dict, mitigation_dict, attack_dict = build_data_structures(db_file_path)
     
     Usage:
-        from nxt.examples.evoting.compat import get_legacy_data
+        from nxt.model.compat import get_legacy_data
         property_dict, context_dict, mitigation_dict, attack_dict = get_legacy_data()
     
     Returns:
