@@ -2,7 +2,7 @@
 # Replicating legacy view.py queries using NetworkX
 
 from typing import Optional
-from nxt import ThreatModel, Property, Attack, Context, Mitigation
+from nxt import ThreatModel, Property, Attack, AttackPattern, Context, Mitigation
 
 
 def property_tree(model: ThreatModel, root: Optional[Property] = None) -> str:
@@ -587,7 +587,12 @@ def _format_attack_table(rows: list[tuple[str, str, str, str]]) -> str:
 # Mitigation views
 # =============================================================================
 
-def mitigation_table(model: ThreatModel, root: Optional[Attack] = None) -> str:
+def mitigation_table(
+    model: ThreatModel,
+    root: Optional[Attack] = None,
+    abstract: bool = False,
+    include_oos: bool = False
+) -> str:
     """
     Display mitigation table in legacy format.
     
@@ -596,6 +601,12 @@ def mitigation_table(model: ThreatModel, root: Optional[Attack] = None) -> str:
     
     Attack line shows the path from root attack to the mitigation:
     RootAttack > ChildAttack (Context) > MitigationName
+    
+    Args:
+        model: The threat model
+        root: Optional root attack to start from
+        abstract: If True, include mitigations from attack patterns (variant_of)
+        include_oos: If True, include "Out of scope" mitigations
     """
     # Get attack mitigation lines: list of (mitigation_name, lineage_string)
     lines_by_mitigation: dict[str, list[str]] = {}
@@ -608,7 +619,7 @@ def mitigation_table(model: ThreatModel, root: Optional[Attack] = None) -> str:
         roots = [root]
     
     for root_attack in roots:
-        _collect_mitigation_lines(model, root_attack, [], lines_by_mitigation, mit_descriptions)
+        _collect_mitigation_lines(model, root_attack, [], lines_by_mitigation, mit_descriptions, abstract, include_oos)
     
     return _format_mitigation_table(lines_by_mitigation, mit_descriptions)
 
@@ -625,13 +636,24 @@ def _collect_mitigation_lines(
     attack: Attack,
     lineage: list[str],
     lines_by_mitigation: dict[str, list[str]],
-    mit_descriptions: dict[str, str]
+    mit_descriptions: dict[str, str],
+    abstract: bool = False,
+    include_oos: bool = False
 ) -> None:
     """
     Recursively collect mitigation lines from attack tree.
     
     Builds attack lineages (paths from root to leaf) and records each
     mitigation found along with its attack path.
+    
+    Args:
+        model: The threat model
+        attack: Current attack being processed
+        lineage: Path from root to current attack
+        lines_by_mitigation: Accumulator for mitigation lines
+        mit_descriptions: Accumulator for mitigation descriptions
+        abstract: If True, include mitigations from attack patterns
+        include_oos: If True, include "Out of scope" mitigations
     """
     # Build current lineage
     current_name = _get_attack_display_name(attack)
@@ -639,8 +661,8 @@ def _collect_mitigation_lines(
     
     # Record direct mitigations on this attack
     for ma in attack.mitigations:
-        if ma.mitigation.id == "OOS":
-            continue  # Skip Out of scope
+        if ma.mitigation.id == "OOS" and not include_oos:
+            continue  # Skip Out of scope unless requested
         
         mit_name = ma.mitigation.name
         # Attack line format: root > child > mitigation
@@ -652,14 +674,71 @@ def _collect_mitigation_lines(
         
         lines_by_mitigation[mit_name].append(attack_line)
     
-    # Note: In legacy, pattern (abstract) mitigations were NOT included
-    # in the mitigation table unless abstract=True was passed. We match
-    # that behavior by NOT following variant_of for pattern mitigations.
+    # If abstract=True, include mitigations from the attack's pattern hierarchy
+    if abstract and attack.variant_of:
+        # Pass the attack lineage as a base; pattern mitigations will use → separator
+        _collect_pattern_mitigations(
+            model, attack.variant_of, current_lineage, [],
+            lines_by_mitigation, mit_descriptions, include_oos
+        )
     
     # Recurse into children (attacks that achieve this one)
     children = [a for a in model.attacks if attack in a.achieves]
     for child in children:
-        _collect_mitigation_lines(model, child, current_lineage, lines_by_mitigation, mit_descriptions)
+        _collect_mitigation_lines(model, child, current_lineage, lines_by_mitigation, mit_descriptions, abstract, include_oos)
+
+
+def _collect_pattern_mitigations(
+    model: ThreatModel,
+    pattern: AttackPattern,
+    attack_lineage: list[str],
+    pattern_lineage: list[str],
+    lines_by_mitigation: dict[str, list[str]],
+    mit_descriptions: dict[str, str],
+    include_oos: bool = False
+) -> None:
+    """
+    Collect mitigations from an attack pattern and its refinements.
+    
+    When abstract=True, we need to include mitigations from:
+    1. The pattern itself
+    2. All patterns that refine this pattern (children in the pattern hierarchy)
+    
+    For example, if attack.variant_of = compromised_device, we collect mitigations
+    from malware, intrusion, escalation_of_privilege, etc. that refine compromised_device.
+    
+    The attack_lineage uses ' > ' separator (direct relationships).
+    The pattern_lineage uses ' → ' separator (inheritance chain).
+    """
+    # Collect mitigations from this pattern
+    for ma in pattern.mitigations:
+        if ma.mitigation.id == "OOS" and not include_oos:
+            continue
+        
+        mit_name = ma.mitigation.name
+        # Build attack line: attack path > pattern path → mitigation
+        attack_part = " > ".join(attack_lineage)
+        if pattern_lineage:
+            pattern_part = " → ".join(pattern_lineage)
+            attack_line = f"{attack_part} → {pattern_part} → {mit_name}"
+        else:
+            attack_line = f"{attack_part} → {mit_name}"
+        
+        if mit_name not in lines_by_mitigation:
+            lines_by_mitigation[mit_name] = []
+            mit_descriptions[mit_name] = ma.mitigation.description or ""
+        
+        lines_by_mitigation[mit_name].append(attack_line)
+    
+    # Collect mitigations from patterns that refine this one
+    for child_pattern in model.patterns:
+        if child_pattern.refines == pattern:
+            # Include the child pattern's name in the pattern lineage
+            child_pattern_lineage = pattern_lineage + [child_pattern.name]
+            _collect_pattern_mitigations(
+                model, child_pattern, attack_lineage, child_pattern_lineage,
+                lines_by_mitigation, mit_descriptions, include_oos
+            )
 
 
 def _format_mitigation_table(

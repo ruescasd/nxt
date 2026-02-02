@@ -1115,3 +1115,50 @@ mitigation from "Malicious reporting of VD":
 +=================================================================+
 | Malicious reporting > Malicious reporting of VD > *Outstanding* |
 +-----------------------------------------------------------------+
+
+❯ python .\view.py -e mitigation -r "Ineligible ballots.Compromised device.EAS"
++---------------------------+------------------------------------------------------+------------------------------------------------------+
+| Mitigation                | Description                                          | Attack line                                          |
++===========================+======================================================+======================================================+
+| Eligibility verifiability | An independent verifier can verify that no ineligi.. | Compromised device (EAS) > Eligibility verifiability |
++---------------------------+------------------------------------------------------+------------------------------------------------------+
+
+nxthreat\legacy on  master [!?] via  v3.14.0
+❯ python .\view.py -e mitigation -r "Ineligible ballots.Compromised device.EAS" -a
++--------------------------------+------------------------------------------------------+-----------------------------------------------------------+
+| Mitigation                     | Description                                          | Attack line                                               |
++================================+======================================================+===========================================================+
+| Cybersecurity---Escalation     | The system deployment incorporates general cyberse.. | Compromised device (EAS) > Cybersecurity---Escalation     |
++--------------------------------+------------------------------------------------------+-----------------------------------------------------------+
+| Cybersecurity---Intrusion      | The system deployment incorporates general cyberse.. | Compromised device (EAS) > Cybersecurity---Intrusion      |
++--------------------------------+------------------------------------------------------+-----------------------------------------------------------+
+| Cybersecurity---Malware        | The system deployment incorporates general cyberse.. | Compromised device (EAS) > Cybersecurity---Malware        |
++--------------------------------+------------------------------------------------------+-----------------------------------------------------------+
+| Cybersecurity---Supply chains  | The system deployment incorporates general cyberse.. | Compromised device (EAS) > Cybersecurity---Supply chains  |
++--------------------------------+------------------------------------------------------+-----------------------------------------------------------+
+| Cybersecurity---Virtualization | The system deployment incorporates general cyberse.. | Compromised device (EAS) > Cybersecurity---Virtualization |
++--------------------------------+------------------------------------------------------+-----------------------------------------------------------+
+| Dependency minimization        | External software dependencies are minimized to th.. | Compromised device (EAS) > Dependency minimization        |
++--------------------------------+------------------------------------------------------+-----------------------------------------------------------+
+| Eligibility verifiability      | An independent verifier can verify that no ineligi.. | Compromised device (EAS) > Eligibility verifiability      |
++--------------------------------+------------------------------------------------------+-----------------------------------------------------------+
+
+❯ python .\view.py  -e mitigation -r "Compromised signature keys.Phishing.VSIG"
+No mitigations found for attack 'Compromised signature keys.Phishing.VSIG'
+
+nxthreat\legacy on  master [!?] via  v3.14.0
+❯ python .\view.py  -e mitigation -r "Compromised signature keys.Phishing.VSIG" -o
++--------------+------------------------------------------------------+--------------------------------+
+| Mitigation   | Description                                          | Attack line                    |
++==============+======================================================+================================+
+| Out of scope | If a voter can be social engineered into giving so.. | Phishing (VSIG) > Out of scope |
++--------------+------------------------------------------------------+--------------------------------+
+
+nxthreat\legacy on  master [!?] via  v3.14.0
+❯ python .\view.py  -e mitigation -r "Compromised signature keys.Phishing.VSIG" -o -a
++--------------+------------------------------------------------------+--------------------------------+
+| Mitigation   | Description                                          | Attack line                    |
++==============+======================================================+================================+
+| Out of scope | If a voter can be social engineered into giving so.. | Phishing (VSIG) > Out of scope |
+|              |                                                      | Phishing (VSIG) > Out of scope |
++--------------+------------------------------------------------------+--------------------------------+

@@ -45,7 +45,137 @@ EDGE_COLORS = {
 }
 
 
-def _inject_focus_mode_js(html_path: str, G) -> None:
+def _compute_attack_mitigations(model) -> dict[str, list[dict]]:
+    """
+    Precompute mitigation lines for each attack.
+    
+    Returns a dict mapping attack node IDs to lists of mitigation dicts.
+    Each dict contains:
+    - line: The attack line string (e.g., "Ineligible ballots > Compromised device (EAS) → Escalation of privilege → Cybersecurity---Escalation")
+    - rationale: The rationale for this mitigation application
+    - style: 'direct', 'inherited', or 'oos'
+    
+    For each attack, we collect:
+    1. Direct mitigations on that attack
+    2. Pattern mitigations (via variant_of hierarchy)
+    3. Mitigations from child attacks (attacks that achieve this one)
+    """
+    attack_mitigations = {}
+    
+    for attack in model.attacks:
+        node_id = attack.id
+        mitigations = []
+        
+        # Recursively collect mitigations from this attack and its children
+        _collect_attack_mits(model, attack, [], mitigations)
+        
+        attack_mitigations[node_id] = mitigations
+    
+    return attack_mitigations
+
+
+def _get_attack_display(attack) -> str:
+    """Get attack name with context for display."""
+    if attack.occurs_in:
+        contexts = ", ".join(c.id for c in attack.occurs_in)
+        return f"{attack.name} ({contexts})"
+    return attack.name
+
+
+def _collect_attack_mits(model, attack, lineage: list[str], mitigations: list[dict]) -> None:
+    """
+    Recursively collect mitigations from an attack and its children.
+    
+    Args:
+        model: The threat model
+        attack: Current attack being processed
+        lineage: Path from root to current attack (display names)
+        mitigations: Accumulator list for mitigation dicts
+    """
+    # Build current lineage
+    current_name = _get_attack_display(attack)
+    current_lineage = lineage + [current_name]
+    
+    # Direct mitigations on this attack
+    for ma in attack.mitigations:
+        attack_line = " > ".join(current_lineage + [ma.mitigation.name])
+        rationale = ma.rationale or ""
+        if ma.mitigation.id == "OOS":
+            mitigations.append({
+                "line": f"⚠️ {attack_line}",
+                "rationale": rationale,
+                "style": "oos"
+            })
+        else:
+            mitigations.append({
+                "line": f"✓ {attack_line}",
+                "rationale": rationale,
+                "style": "direct"
+            })
+    
+    # Pattern mitigations (from variant_of hierarchy)
+    if attack.variant_of:
+        pattern_mits = _collect_pattern_mits(model, attack.variant_of, [])
+        for mit_name, pattern_path, is_oos, rationale in pattern_mits:
+            # Build attack line: lineage > attack → pattern_path → mitigation
+            attack_part = " > ".join(current_lineage)
+            if pattern_path:
+                pattern_str = " → ".join(pattern_path)
+                attack_line = f"{attack_part} → {pattern_str} → {mit_name}"
+            else:
+                attack_line = f"{attack_part} → {mit_name}"
+            
+            if is_oos:
+                mitigations.append({
+                    "line": f"⚠️ {attack_line}",
+                    "rationale": rationale,
+                    "style": "oos"
+                })
+            else:
+                mitigations.append({
+                    "line": f"○ {attack_line}",
+                    "rationale": rationale,
+                    "style": "inherited"
+                })
+    
+    # Recurse into children (attacks that achieve this one)
+    children = [a for a in model.attacks if attack in a.achieves]
+    for child in children:
+        _collect_attack_mits(model, child, current_lineage, mitigations)
+
+
+def _collect_pattern_mits(model, pattern, pattern_path: list[str]) -> list[tuple[str, list[str], bool, str]]:
+    """
+    Collect mitigations from a pattern and its refinements.
+    Returns list of (mitigation_name, pattern_path, is_oos, rationale) tuples.
+    
+    Args:
+        model: The threat model
+        pattern: The pattern to collect mitigations from
+        pattern_path: The path of pattern names leading to this pattern
+    """
+    result = []
+    
+    # Mitigations on this pattern
+    for ma in pattern.mitigations:
+        is_oos = ma.mitigation.id == "OOS"
+        rationale = ma.rationale or ""
+        result.append((ma.mitigation.name, pattern_path.copy(), is_oos, rationale))
+    
+    # Recurse into patterns that refine this one
+    for child_pattern in model.patterns:
+        if child_pattern.refines == pattern:
+            child_path = pattern_path + [child_pattern.name]
+            result.extend(_collect_pattern_mits(model, child_pattern, child_path))
+    
+    return result
+
+
+def _inject_focus_mode_js(
+    html_path: str,
+    G,
+    attack_mitigations: dict[str, list[dict]],
+) -> None:
     """
     Inject custom JavaScript for directional transitive reachability.
     
@@ -209,11 +339,34 @@ html, body {{
 #nodeDetails.active {{
     display: block;
 }}
+#nodeDetails .node-header {{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}}
 #nodeDetails .node-title {{
     font-weight: bold;
     font-size: 14px;
     margin-bottom: 5px;
     color: #212529;
+    flex: 1;
+}}
+#nodeDetails #copyLinkBtn {{
+    background: #e9ecef;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}}
+#nodeDetails #copyLinkBtn:hover {{
+    background: #dee2e6;
+}}
+#nodeDetails #copyLinkBtn.copied {{
+    background: #28a745;
+    color: white;
 }}
 #nodeDetails .node-type-badge {{
     display: inline-block;
@@ -233,6 +386,108 @@ html, body {{
     font-size: 12px;
     line-height: 1.5;
     color: #495057;
+}}
+#nodeDetails .node-id {{
+    font-family: monospace;
+    font-size: 10px;
+    color: #6c757d;
+    background: #e9ecef;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-bottom: 8px;
+}}
+#nodeMitigations {{
+    margin-top: 12px;
+    display: none;
+}}
+#nodeMitigations.active {{
+    display: block;
+}}
+#nodeMitigations .mitigations-title {{
+    font-weight: bold;
+    font-size: 12px;
+    color: #495057;
+    margin-bottom: 6px;
+    border-top: 1px solid #dee2e6;
+    padding-top: 10px;
+}}
+#nodeMitigations ul {{
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+    font-size: 11px;
+    line-height: 1.5;
+}}
+#nodeMitigations li {{
+    color: #495057;
+    margin-bottom: 8px;
+    padding-left: 4px;
+    border-left: 2px solid #28a745;
+}}
+#nodeMitigations li.inherited {{
+    color: #6c757d;
+    border-left-color: #6c757d;
+}}
+#nodeMitigations li.oos {{
+    color: #856404;
+    border-left-color: #ffc107;
+}}
+#nodeMitigations .attack-line {{
+    font-weight: 500;
+    cursor: default;
+}}
+#nodeMitigations li {{
+    position: relative;
+}}
+#nodeMitigations .info-icon {{
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    line-height: 14px;
+    text-align: center;
+    font-size: 10px;
+    color: #6c757d;
+    background: #e9ecef;
+    border-radius: 50%;
+    margin-left: 6px;
+    cursor: help;
+    vertical-align: middle;
+}}
+#nodeMitigations .info-icon:hover {{
+    background: #dee2e6;
+    color: #495057;
+}}
+#nodeMitigations .tooltip {{
+    visibility: hidden;
+    opacity: 0;
+    position: fixed;
+    background: #2d3436;
+    color: #fff;
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1.5;
+    max-width: 400px;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: opacity 0.2s, visibility 0.2s;
+    pointer-events: none;
+}}
+#nodeMitigations .tooltip::before {{
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 20px;
+    border-width: 0 6px 6px 6px;
+    border-style: solid;
+    border-color: transparent transparent #2d3436 transparent;
+}}
+#nodeMitigations .info-icon:hover + .tooltip {{
+    visibility: visible;
+    opacity: 1;
 }}
 .hint {{
     color: #6c757d;
@@ -264,19 +519,19 @@ document.addEventListener('DOMContentLoaded', function() {{
             <input type="text" id="searchInput" placeholder="Type to search...">
             <div id="searchResults"></div>
         </div>
-        <div class="section">
-            <div class="section-title">Focus Options</div>
-            <label>
-                <input type="checkbox" id="hideUnreachable">
-                <span>Hide unreachable nodes</span>
-            </label>
-            <div class="hint">Click node to focus on reachable subgraph.<br>Shift+Click toggles hide mode.</div>
-        </div>
-        <div id="focusStatus">Click a node to focus</div>
+        <div id="focusStatus">Shift+Click to toggle hide mode</div>
         <div id="nodeDetails">
-            <div class="node-title" id="nodeTitle"></div>
+            <div class="node-header">
+                <div class="node-title" id="nodeTitle"></div>
+                <button id="copyLinkBtn" title="Copy link to this node">🔗</button>
+            </div>
+            <div class="node-id" id="nodeId"></div>
             <span class="node-type-badge" id="nodeTypeBadge"></span>
             <div class="node-description" id="nodeDescription"></div>
+            <div id="nodeMitigations">
+                <div class="mitigations-title">Attack Lines</div>
+                <ul id="mitigationsList"></ul>
+            </div>
         </div>
     `;
     
@@ -297,12 +552,20 @@ document.addEventListener('DOMContentLoaded', function() {{
 </script>
 <script type="text/javascript">
 (function() {{
+    // Helper function to escape HTML special characters
+    function escapeHtml(text) {{
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }}
+    
     // Adjacency data
     var outEdges = {json.dumps(out_edges)};
     var inEdges = {json.dumps(in_edges)};
     var originalColors = {json.dumps(node_colors)};
     var nodeLabels = {json.dumps(node_labels)};
     var nodeDescriptions = {json.dumps(node_descriptions)};
+    var attackMitigations = {json.dumps(attack_mitigations)};
     
     // Build node type lookup
     var nodeTypes = {json.dumps({nid: data.get("node_type", "unknown") for nid, data in G.nodes(data=True)})};
@@ -320,7 +583,37 @@ document.addEventListener('DOMContentLoaded', function() {{
             // Resize network to fit new container
             network.redraw();
             network.fit();
+            // Check for URL parameters
+            handleUrlParameters();
         }}, 200);
+    }}
+    
+    // Handle URL parameters to focus on specific nodes
+    function handleUrlParameters() {{
+        var params = new URLSearchParams(window.location.search);
+        var nodeId = params.get('node');
+        var hideMode = params.get('hide') === 'true';
+        
+        if (nodeId && nodeLabels[nodeId]) {{
+            // Update hide mode if specified
+            if (hideMode) {{
+                hideUnreachableMode = true;
+            }}
+            
+            // Focus on the node with animation
+            network.focus(nodeId, {{
+                scale: 1.2,
+                animation: {{
+                    duration: 800,
+                    easingFunction: 'easeInOutQuad'
+                }}
+            }});
+            
+            // Apply focus behavior
+            setTimeout(function() {{
+                applyFocus(nodeId, hideUnreachableMode);
+            }}, 100);
+        }}
     }}
     
     function setupSearch() {{
@@ -375,8 +668,7 @@ document.addEventListener('DOMContentLoaded', function() {{
                 }});
                 
                 // Trigger the focus behavior
-                var hideCheckbox = document.getElementById('hideUnreachable');
-                applyFocus(nodeId, hideCheckbox.checked);
+                applyFocus(nodeId, hideUnreachableMode);
                 
                 searchInput.value = '';
                 searchResults.classList.remove('active');
@@ -394,15 +686,50 @@ document.addEventListener('DOMContentLoaded', function() {{
     
     var applyFocus; // Will be set by setupFocusMode
     
+    var hideUnreachableMode = false; // Track hide mode state
+    
     function setupFocusMode() {{
         var allNodes = network.body.data.nodes;
         var allEdges = network.body.data.edges;
-        var hideCheckbox = document.getElementById('hideUnreachable');
         var statusDiv = document.getElementById('focusStatus');
         var nodeDetails = document.getElementById('nodeDetails');
         var nodeTitle = document.getElementById('nodeTitle');
+        var nodeIdElem = document.getElementById('nodeId');
         var nodeTypeBadge = document.getElementById('nodeTypeBadge');
         var nodeDescription = document.getElementById('nodeDescription');
+        var nodeMitigations = document.getElementById('nodeMitigations');
+        var mitigationsList = document.getElementById('mitigationsList');
+        var copyLinkBtn = document.getElementById('copyLinkBtn');
+        
+        // Copy link button handler
+        copyLinkBtn.addEventListener('click', function() {{
+            if (currentFocusNode) {{
+                var url = window.location.origin + window.location.pathname + '?node=' + encodeURIComponent(currentFocusNode);
+                if (hideUnreachableMode) {{
+                    url += '&hide=true';
+                }}
+                navigator.clipboard.writeText(url).then(function() {{
+                    copyLinkBtn.textContent = '✓';
+                    copyLinkBtn.classList.add('copied');
+                    setTimeout(function() {{
+                        copyLinkBtn.textContent = '🔗';
+                        copyLinkBtn.classList.remove('copied');
+                    }}, 1500);
+                }});
+            }}
+        }});
+        
+        // Update URL when focusing on a node (without reloading)
+        function updateUrl(nodeId) {{
+            var url = window.location.pathname;
+            if (nodeId) {{
+                url += '?node=' + encodeURIComponent(nodeId);
+                if (hideUnreachableMode) {{
+                    url += '&hide=true';
+                }}
+            }}
+            window.history.replaceState(null, '', url);
+        }}
         
         // Store original node data
         var originalNodeData = {{}};
@@ -432,14 +759,54 @@ document.addEventListener('DOMContentLoaded', function() {{
             var desc = nodeDescriptions[nodeId] || '';
             
             nodeTitle.textContent = label;
+            nodeIdElem.textContent = nodeId;
             nodeTypeBadge.textContent = type;
             nodeTypeBadge.className = 'node-type-badge ' + type;
             nodeDescription.textContent = desc;
             nodeDetails.classList.add('active');
+            
+            // Show mitigations for attacks
+            if (type === 'attack' && attackMitigations[nodeId]) {{
+                var mits = attackMitigations[nodeId];
+                if (mits.length > 0) {{
+                    mitigationsList.innerHTML = mits.map(function(mit) {{
+                        var tooltip = mit.rationale ? '<span class="info-icon">i</span><span class="tooltip">' + escapeHtml(mit.rationale) + '</span>' : '';
+                        return '<li class="' + mit.style + '"><div class="attack-line">' + mit.line + tooltip + '</div></li>';
+                    }}).join('');
+                    
+                    // Position tooltips near their icons
+                    setTimeout(function() {{
+                        var icons = mitigationsList.querySelectorAll('.info-icon');
+                        icons.forEach(function(icon) {{
+                            var tooltip = icon.nextElementSibling;
+                            if (tooltip) {{
+                                icon.addEventListener('mouseenter', function(e) {{
+                                    var rect = icon.getBoundingClientRect();
+                                    tooltip.style.left = Math.max(10, rect.left - 20) + 'px';
+                                    tooltip.style.top = (rect.bottom + 8) + 'px';
+                                    // Ensure tooltip doesn't go off-screen right
+                                    var tooltipRect = tooltip.getBoundingClientRect();
+                                    if (tooltipRect.right > window.innerWidth - 10) {{
+                                        tooltip.style.left = (window.innerWidth - tooltipRect.width - 10) + 'px';
+                                    }}
+                                }});
+                            }}
+                        }});
+                    }}, 0);
+                    
+                    nodeMitigations.classList.add('active');
+                }} else {{
+                    mitigationsList.innerHTML = '<li>No mitigations</li>';
+                    nodeMitigations.classList.add('active');
+                }}
+            }} else {{
+                nodeMitigations.classList.remove('active');
+            }}
         }}
         
         function hideNodeDetails() {{
             nodeDetails.classList.remove('active');
+            nodeMitigations.classList.remove('active');
         }}
         
         // Compute forward reachable nodes (following out-edges)
@@ -483,6 +850,7 @@ document.addEventListener('DOMContentLoaded', function() {{
             statusDiv.textContent = 'Click a node to focus';
             statusDiv.classList.remove('active');
             hideNodeDetails();
+            updateUrl(null);  // Clear URL parameter
             
             var updates = [];
             allNodes.forEach(function(node) {{
@@ -511,6 +879,7 @@ document.addEventListener('DOMContentLoaded', function() {{
         applyFocus = function(selectedNode, hideMode) {{
             currentFocusNode = selectedNode;
             showNodeDetails(selectedNode);
+            updateUrl(selectedNode);  // Update URL with current node
             
             // Compute reachable nodes in both directions
             var forwardSet = forwardReachable(selectedNode);
@@ -600,12 +969,7 @@ document.addEventListener('DOMContentLoaded', function() {{
             }}
         }}
         
-        // Handle checkbox change - reapply focus if there's a current focus
-        hideCheckbox.addEventListener('change', function() {{
-            if (currentFocusNode !== null) {{
-                applyFocus(currentFocusNode, hideCheckbox.checked);
-            }}
-        }});
+
         
         // Handle node click
         network.on("click", function(params) {{
@@ -618,10 +982,10 @@ document.addEventListener('DOMContentLoaded', function() {{
             
             // Shift+Click toggles hide mode
             if (params.event.srcEvent.shiftKey) {{
-                hideCheckbox.checked = !hideCheckbox.checked;
+                hideUnreachableMode = !hideUnreachableMode;
             }}
             
-            applyFocus(selectedNode, hideCheckbox.checked);
+            applyFocus(selectedNode, hideUnreachableMode);
         }});
     }}
     
@@ -735,8 +1099,11 @@ def create_visualization(
     # Generate HTML
     net.write_html(output_path)
     
+    # Precompute attack mitigations for the side panel
+    attack_mitigations = _compute_attack_mitigations(threat_model)
+    
     # Add custom JavaScript for directional transitive reachability
-    _inject_focus_mode_js(output_path, G)
+    _inject_focus_mode_js(output_path, G, attack_mitigations)
     
     print(f"Visualization saved to: {output_path}")
     print(f"  Nodes: {G.number_of_nodes()}")
