@@ -1,4 +1,4 @@
-# Example E2E-VIV Threat Model - Properties
+# SecureVote Threat Model - Properties
 # Security properties with hierarchical AND composition
 
 from nxt import Property

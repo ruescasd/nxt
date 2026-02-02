@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Interactive Pyvis visualization for the E2E-VIV threat model.
+Interactive Pyvis visualization for the SecureVote threat model.
 
 Generates an interactive HTML file that can be opened in a browser
 to explore the threat model graph.

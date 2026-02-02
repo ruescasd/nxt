@@ -2,9 +2,9 @@
 # Copyright (C) 2026 Free & Fair
 
 """
-A Python framework for expressing threat models as typed graphs.
+Threat modeling for SecureVote.
 
-The authoring layer provides Pydantic models with full IDE support
+The authoring layer provides Pydantic models with IDE support
 (autocomplete, type checking, refactoring). These are converted to
 a NetworkX graph for querying and analysis.
 """

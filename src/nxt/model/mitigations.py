@@ -1,4 +1,4 @@
-# E2E-VIV Threat Model - Mitigations
+# SecureVote Threat Model - Mitigations
 # Countermeasures that prevent or reduce impact of attacks
 
 from nxt import Mitigation, Scope

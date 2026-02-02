@@ -1,4 +1,4 @@
-# E2E-VIV Threat Model - Legacy Compatibility Layer
+# SecureVote Threat Model - Legacy Compatibility Layer
 # 
 # This module provides data structures compatible with the legacy 
 # read_database.py format, enabling drop-in replacement for the

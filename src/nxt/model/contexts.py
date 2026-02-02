@@ -1,4 +1,4 @@
-# E2E-VIV Threat Model - Contexts
+# SecureVote Threat Model - Contexts
 # Contexts represent "where" an attack is carried out
 
 from nxt import Context, ContextKind

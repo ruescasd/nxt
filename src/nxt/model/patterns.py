@@ -1,4 +1,4 @@
-# E2E-VIV Threat Model - Attack Patterns
+# SecureVote Threat Model - Attack Patterns
 # Abstract attacks that can be instantiated as concrete attacks
 
 from nxt import AttackPattern, MitigationApplication, OUT_OF_SCOPE

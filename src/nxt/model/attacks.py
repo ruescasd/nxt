@@ -1,4 +1,4 @@
-# E2E-VIV Threat Model - Concrete Attacks
+# SecureVote Threat Model - Concrete Attacks
 # Specific attacks instantiated from patterns
 
 from nxt import Attack, MitigationApplication, OUT_OF_SCOPE

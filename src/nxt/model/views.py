@@ -1,4 +1,4 @@
-# E2E-VIV Threat Model - View Functions
+# SecureVote Threat Model - View Functions
 # Replicating legacy view.py queries using NetworkX
 
 from typing import Optional
