@@ -2,3 +2,4 @@
 __pycache__/
 src/nxt/latex
 legacy/latex
+threat_model.html
